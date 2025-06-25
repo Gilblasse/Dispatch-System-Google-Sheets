@@ -66,6 +66,12 @@ function deleteTodaysLogsThenUpdateSnapshotDispatchToLog() {
 
 
 function snapshotDispatchToLog(isAlert = false) {
+  const props = PropertiesService.getScriptProperties();
+  const last = Number(props.getProperty('lastSnapshotTs') || 0);
+  if (!isAlert && Date.now() - last < 5 * 60 * 1000) {
+    return false;
+  }
+  props.setProperty('lastSnapshotTs', Date.now());
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const logSheet = ss.getSheetByName("LOG");
   const dispatchSheet = ss.getSheetByName("DISPATCH");
@@ -154,6 +160,8 @@ function snapshotDispatchToLog(isAlert = false) {
   if (isAlert) {
     SpreadsheetApp.getUi().alert(`✅ Snapshot was taken of DISPATCH`);
   }
+
+  return true;
 }
 
 
@@ -353,4 +361,8 @@ function promptRestoreSnapshotByDate() {
   }
 
   restoreDispatchFromLog(inputDate);
+}
+
+function maybeSnapshotDispatchToLog() {
+  return snapshotDispatchToLog(false);
 }
