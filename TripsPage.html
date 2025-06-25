@@ -486,6 +486,9 @@
       applyFilter(currentFilter);
 
       loadTrips(new Date(selected).toISOString().split("T")[0]);
+
+      // Poll for updates every minute without blocking the UI
+      setInterval(pollTrips, 60 * 1000);
     });
 
     document.addEventListener("click", function(event) {
@@ -808,7 +811,7 @@
 
 
 
-      function resolveTripStatus(tripStatus, dispatchStatus) {
+  function resolveTripStatus(tripStatus, dispatchStatus) {
     const topDriverStatuses = ["pickuplocation", "dropofflocation", "complete", "intransit", "inroute"];
     const dispatcherOverrides = ["reassign", "notconfirmed", "ready", "updatetime", "noshow"];
 
@@ -820,6 +823,98 @@
       return dispatchStatus;
     }
     return tripStatus;
+  }
+
+  function pollTrips() {
+    const dateInput = document.getElementById("trip-date");
+    const currentDate = dateInput.value;
+    google.script.run
+      .withSuccessHandler(newTrips => {
+        updateTripCards(newTrips || []);
+      })
+      .withFailureHandler(handleError)
+      .getTripsByDate(currentDate);
+  }
+
+  function matchesSearch(trip) {
+    if (!searchQuery) return true;
+    const normalizedSearch = searchQuery.replace(/\D/g, '');
+    const shouldMatchPhone = normalizedSearch.length > 0;
+
+    const passenger = String(trip.passenger || '').trim().toLowerCase();
+    const driver = String(trip.driver || '').trim().toLowerCase();
+    const pickup = String(trip.pickup || '').trim().toLowerCase();
+    const dropoff = String(trip.dropoff || '').trim().toLowerCase();
+    const phoneDigits = String(trip.phone || '').replace(/\D/g, '');
+    const medicaid = String(trip.medicaid || '').trim().toLowerCase();
+    const invoice = String(trip.invoice || '').trim().toLowerCase();
+    const id = String(trip.id || '').toLowerCase();
+    const returnOf = String(trip.returnOf || '').toLowerCase();
+
+    const matchLog = {
+      passenger: passenger.includes(searchQuery),
+      driver: driver.includes(searchQuery),
+      pickup: pickup.includes(searchQuery),
+      dropoff: dropoff.includes(searchQuery),
+      phoneDigits: shouldMatchPhone && phoneDigits.includes(normalizedSearch),
+      medicaid: medicaid.includes(searchQuery),
+      invoice: invoice.includes(searchQuery),
+      id: id.includes(searchQuery),
+      returnOf: returnOf.includes(searchQuery)
+    };
+
+    return Object.values(matchLog).some(Boolean);
+  }
+
+  function updateTripCards(newTrips) {
+    const container = document.getElementById("tripList");
+    const scrollPos = container.scrollTop;
+
+    if (currentFilter !== 'time') {
+      allTrips = newTrips;
+      applySearch();
+      container.scrollTop = scrollPos;
+      return;
+    }
+
+    const oldMap = new Map(allTrips.map(t => [t.id, t]));
+    const newMap = new Map(newTrips.map(t => [t.id, t]));
+
+    // Remove cards for deleted trips
+    allTrips.forEach(t => {
+      if (!newMap.has(t.id)) {
+        const el = container.querySelector(`[data-trip-id="${t.id}"]`);
+        if (el) el.remove();
+      }
+    });
+
+    const getTime = t => new Date(t.time).getTime();
+
+    // Insert or update trips
+    newTrips
+      .sort((a, b) => getTime(a) - getTime(b))
+      .forEach(trip => {
+        const existing = container.querySelector(`[data-trip-id="${trip.id}"]`);
+        const shouldShow = matchesSearch(trip);
+        if (existing) {
+          const oldTrip = oldMap.get(trip.id);
+          if (!shouldShow) {
+            existing.remove();
+          } else if (JSON.stringify(oldTrip) !== JSON.stringify(trip)) {
+            const newCard = createTripCard(trip);
+            existing.replaceWith(newCard);
+          }
+        } else if (shouldShow) {
+          const newCard = createTripCard(trip);
+          const cards = Array.from(container.querySelectorAll('.trip-card'));
+          const idx = cards.findIndex(c => getTime(newMap.get(c.dataset.tripId)) > getTime(trip));
+          if (idx === -1) container.appendChild(newCard);
+          else container.insertBefore(newCard, cards[idx]);
+        }
+      });
+
+    allTrips = newTrips;
+    container.scrollTop = scrollPos;
   }
 
   function createTripCard(trip) {
@@ -843,6 +938,7 @@
 
     const card = document.createElement("div");
     card.className = "trip-card";
+    card.dataset.tripId = trip.id;
     const isReturn = !!trip.returnOf;
 
     card.innerHTML = `
