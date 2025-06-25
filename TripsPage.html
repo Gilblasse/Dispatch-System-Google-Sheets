@@ -472,7 +472,7 @@
 
   <script>
     const initialDate = <?= JSON.stringify(initialDate) ?>;
-    let currentFilter = 'time';
+    let currentFilter = localStorage.getItem('tripsFilter') || 'time';
     let currentLoadToken = 0;
     let allTrips = []; // stores raw trip data
     let searchQuery = ''; // stores current search
@@ -517,6 +517,7 @@
 
     function applyFilter(type) {
       currentFilter = type;
+      localStorage.setItem('tripsFilter', type);
       const dateInput = document.getElementById("trip-date");
 
       // Always hide filter menu
