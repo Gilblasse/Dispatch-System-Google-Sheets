@@ -1,9 +1,24 @@
 const logIndexCache = {};
+const props = PropertiesService.getScriptProperties();
+
+function loadDateIndex() {
+  const raw = props.getProperty('LOG_DATE_INDEX') || '{}';
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveDateIndex(index) {
+  props.setProperty('LOG_DATE_INDEX', JSON.stringify(index));
+}
 
 class TripManager {
   constructor(service, logManager) {
     this.service = service;
     this.logManager = logManager;
+    this.dateIndex = loadDateIndex();
   }
 
   get logSheet() {
@@ -98,15 +113,23 @@ class TripManager {
     const sorted = sortTripsByTime(trips);
     sheet.getRange(rowIndex + 2, jsonCol).setValue(JSON.stringify(sorted));
 
-    // update cache for this date
+    // update cache and persistent index for this date
     logIndexCache[normalizedDate] = rowIndex;
+    this.dateIndex[normalizedDate] = rowIndex;
+    saveDateIndex(this.dateIndex);
   }
 
   getTripsByDate(dateStr) {
     const sheet = this.logSheet;
-
+    let row;
     if (logIndexCache.hasOwnProperty(dateStr)) {
-      const row = logIndexCache[dateStr];
+      row = logIndexCache[dateStr];
+    } else if (this.dateIndex.hasOwnProperty(dateStr)) {
+      row = this.dateIndex[dateStr];
+      logIndexCache[dateStr] = row;
+    }
+
+    if (row !== undefined) {
       const json = sheet.getRange(row + 2, 2).getValue();
       if (!json) return [];
       return this.logManager.jsonToTrips(json);
@@ -119,6 +142,8 @@ class TripManager {
       const rowDate = Utils.formatDateString(data[i][0]);
       if (rowDate === dateStr) {
         logIndexCache[dateStr] = i;
+        this.dateIndex[dateStr] = i;
+        saveDateIndex(this.dateIndex);
         const jsonStr = data[i][1];
         if (!jsonStr) return [];
         return this.logManager.jsonToTrips(jsonStr);
@@ -208,7 +233,10 @@ class TripManager {
         sheet.getRange(targetRowIndex + 2, jsonCol).setValue(JSON.stringify(sorted));
       } else {
         sheet.appendRow([normalizedDate, JSON.stringify([updatedRow])]);
+        targetRowIndex = sheet.getLastRow() - 2;
       }
+      this.dateIndex[normalizedDate] = targetRowIndex;
+      saveDateIndex(this.dateIndex);
       return;
     }
     if (isUndated) {
@@ -223,6 +251,8 @@ class TripManager {
       undatedTrips.push(updatedRow);
       const sorted = sortTripsByTime(undatedTrips);
       sheet.getRange(2, jsonCol).setValue(JSON.stringify(sorted));
+      this.dateIndex[''] = 0;
+      saveDateIndex(this.dateIndex);
     }
   }
 
@@ -270,6 +300,8 @@ class TripManager {
     }
     const sorted = sortTripsByTime(trips);
     range.setValue(JSON.stringify(sorted));
+    this.dateIndex[targetDate] = rowIndex;
+    saveDateIndex(this.dateIndex);
   }
 }
 
