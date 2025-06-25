@@ -1,3 +1,5 @@
+const logIndexCache = {};
+
 class TripManager {
   constructor(service, logManager) {
     this.service = service;
@@ -53,6 +55,7 @@ class TripManager {
 
   addTripToLog(trip) {
     const sheet = this.logSheet;
+    for (const k in logIndexCache) delete logIndexCache[k];
     const allData = sheet.getRange('A2:B101').getValues();
     const jsonCol = 2;
     if (!trip?.id) {
@@ -94,14 +97,28 @@ class TripManager {
     trips.push(newRow);
     const sorted = sortTripsByTime(trips);
     sheet.getRange(rowIndex + 2, jsonCol).setValue(JSON.stringify(sorted));
+
+    // update cache for this date
+    logIndexCache[normalizedDate] = rowIndex;
   }
 
   getTripsByDate(dateStr) {
     const sheet = this.logSheet;
-    const data = sheet.getDataRange().getValues();
-    for (let i = 1; i < data.length; i++) {
+
+    if (logIndexCache.hasOwnProperty(dateStr)) {
+      const row = logIndexCache[dateStr];
+      const json = sheet.getRange(row + 2, 2).getValue();
+      if (!json) return [];
+      return this.logManager.jsonToTrips(json);
+    }
+
+    const last = sheet.getLastRow();
+    const data = sheet.getRange(2, 1, last - 1, 2).getValues();
+
+    for (let i = 0; i < data.length; i++) {
       const rowDate = Utils.formatDateString(data[i][0]);
       if (rowDate === dateStr) {
+        logIndexCache[dateStr] = i;
         const jsonStr = data[i][1];
         if (!jsonStr) return [];
         return this.logManager.jsonToTrips(jsonStr);
@@ -134,6 +151,7 @@ class TripManager {
 
   updateTripInLog(trip) {
     const sheet = this.logSheet;
+    for (const k in logIndexCache) delete logIndexCache[k];
     const allData = sheet.getRange('A2:B101').getValues();
     const jsonCol = 2;
     if (!trip?.id) return;
@@ -210,6 +228,7 @@ class TripManager {
 
   deleteTripFromLog(id, date) {
     const sheet = this.logSheet;
+    for (const k in logIndexCache) delete logIndexCache[k];
     const allData = sheet.getRange('A2:B101').getValues();
     const jsonCol = 2;
     if (!id) return;

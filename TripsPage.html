@@ -364,6 +364,24 @@
       justify-content: space-between;
     }
 
+    .status-section {
+      margin-bottom: 16px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 8px;
+    }
+
+    .status-header {
+      font-weight: 600;
+      font-size: 12px;
+      margin: 6px 0;
+      color: #2c3e50;
+      background: #cce5ff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
     .dropdown button.active-filter {
       background-color: #e6f0ff;
       font-weight: 600;
@@ -407,6 +425,7 @@
       <div id="filterMenu" class="dropdown hidden">
         <button onclick="applyFilter('time')">🕒 Filter by Time</button>
         <button onclick="applyFilter('driver')">🧑‍✈️ Filter by Driver</button>
+        <button onclick="applyFilter('status')">🚦 Filter by Status</button>
       </div>
     </div>
   </header>
@@ -499,7 +518,6 @@
     function applyFilter(type) {
       currentFilter = type;
       const dateInput = document.getElementById("trip-date");
-      loadTrips(dateInput.value);
 
       // Always hide filter menu
       const filterMenu = document.getElementById("filterMenu");
@@ -550,13 +568,18 @@
       document.getElementById("loading-overlay").style.display = display;
     }
 
+    function handleError(e) {
+      pageLoader(false);
+      alert("Error: " + (e.message || e));
+    }
+
     function openTripForm() {
       const dateInput = document.getElementById("trip-date");
-      google.script.run.showAddTripSidebar(dateInput.value);
+      google.script.run.withFailureHandler(handleError).showAddTripSidebar(dateInput.value);
     }
 
     function editTrip(id, date) {
-      google.script.run.showEditTripSidebar(id, date);
+      google.script.run.withFailureHandler(handleError).showEditTripSidebar(id, date);
     }
 
     function exportTrips() {
@@ -571,7 +594,10 @@
         pageLoader(false);
         return;
       }
-      google.script.run.withSuccessHandler(() => pageLoader(false)).restoreDispatchFromLog(dateInput);
+      google.script.run
+        .withSuccessHandler(() => pageLoader(false))
+        .withFailureHandler(handleError)
+        .restoreDispatchFromLog(dateInput);
     }
 
     function importTrips() {
@@ -594,9 +620,15 @@
         pageLoader(true);
 
         if (confirmed) {
-          google.script.run.withSuccessHandler(sucessAfterSnapShot).deleteTodaysLogsThenUpdateSnapshotDispatchToLog();
+          google.script.run
+            .withSuccessHandler(sucessAfterSnapShot)
+            .withFailureHandler(handleError)
+            .deleteTodaysLogsThenUpdateSnapshotDispatchToLog();
         } else {
-          google.script.run.withSuccessHandler(sucessAfterSnapShot).snapshotDispatchToLog();
+          google.script.run
+            .withSuccessHandler(sucessAfterSnapShot)
+            .withFailureHandler(handleError)
+            .snapshotDispatchToLog();
         }
     }
 
@@ -617,16 +649,22 @@
         <span class="spinner"></span> Loading trips...</div>`;
 
       const proceed = () => {
-       google.script.run.withSuccessHandler(trips => {
+       google.script.run
+          .withSuccessHandler(trips => {
           if (token === currentLoadToken) {
             allTrips = trips || [];
             applySearch(); // render based on search
           }
-        }).getTripsByDate(date);
+          })
+          .withFailureHandler(handleError)
+          .getTripsByDate(date);
       };
 
       if (selectedDate.getTime() === now.getTime()) {
-        google.script.run.withSuccessHandler(proceed).snapshotDispatchToLog();
+        google.script.run
+          .withSuccessHandler(proceed)
+          .withFailureHandler(handleError)
+          .maybeSnapshotDispatchToLog();
       } else {
         proceed();
       }
@@ -723,6 +761,30 @@
           section.appendChild(header);
 
           grouped[driver]
+            .sort((a, b) => new Date(a.time) - new Date(b.time))
+            .forEach(trip => {
+              section.appendChild(createTripCard(trip));
+            });
+
+          container.appendChild(section);
+        });
+      } else if (currentFilter === 'status') {
+        const grouped = trips.reduce((acc, trip) => {
+          const status = resolveTripStatus(trip.status, trip.dispatchStatus) || 'pending';
+          if (!acc[status]) acc[status] = [];
+          acc[status].push(trip);
+          return acc;
+        }, {});
+        Object.keys(grouped).forEach(status => {
+          const section = document.createElement("div");
+          section.className = "status-section";
+
+          const header = document.createElement("div");
+          header.className = "status-header";
+          header.innerHTML = `<span>${status}</span><span>(${grouped[status].length})</span>`;
+          section.appendChild(header);
+
+          grouped[status]
             .sort((a, b) => new Date(a.time) - new Date(b.time))
             .forEach(trip => {
               section.appendChild(createTripCard(trip));

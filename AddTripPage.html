@@ -40,7 +40,12 @@
 
       function goBack() {
         const date = document.getElementById("trip-date").value;
-        google.script.run.openPassengerTripList(date);
+        google.script.run.withFailureHandler(handleError).openPassengerTripList(date);
+      }
+
+      function handleError(e) {
+        document.getElementById("loading-overlay").style.display = "none";
+        alert("Error: " + (e.message || e));
       }
 
       function addHoursToTime(timeStr, hoursToAdd) {
@@ -133,15 +138,20 @@
                 notes: (trip.notes || "") + " [RETURN TRIP]",
                 returnOf: trip.id
               };
-              google.script.run.withSuccessHandler(()=>{
-                document.getElementById("loading-overlay").style.display = "none";
-                google.script.run.withSuccessHandler().openPassengerTripList(date);
-              }).addTripToLog(returnTrip);
+              google.script.run
+                .withSuccessHandler(() => {
+                  document.getElementById("loading-overlay").style.display = "none";
+                  google.script.run.withSuccessHandler().withFailureHandler(handleError).openPassengerTripList(date);
+                })
+                .withFailureHandler(handleError)
+                .addTripToLog(returnTrip);
             } else {
               document.getElementById("loading-overlay").style.display = "none";
-              google.script.run.withSuccessHandler().openPassengerTripList(date);
+              google.script.run.withSuccessHandler().withFailureHandler(handleError).openPassengerTripList(date);
             }
-        }).addTripToLog(trip);
+        })
+          .withFailureHandler(handleError)
+          .addTripToLog(trip);
       }
 
     </script>

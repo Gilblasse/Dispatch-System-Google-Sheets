@@ -32,7 +32,10 @@
         const safeDate = rawTripDate ? formatDateString(new Date(rawTripDate)) : "";
 
         document.getElementById("loading-overlay").style.display = "flex";
-        google.script.run.withSuccessHandler(populateTripForm).getTripById(safeId, safeDate);
+        google.script.run
+          .withSuccessHandler(populateTripForm)
+          .withFailureHandler(handleError)
+          .getTripById(safeId, safeDate);
 
         loadTripFormData(); // 🔁 Load passengers, vehicles, and drivers
       });
@@ -82,7 +85,12 @@
 
       function goBack() {
         const date = document.getElementById("trip-date").value
-        google.script.run.withSuccessHandler().openPassengerTripList(date);
+        google.script.run.withSuccessHandler().withFailureHandler(handleError).openPassengerTripList(date);
+      }
+
+      function handleError(e) {
+        document.getElementById("loading-overlay").style.display = "none";
+        alert("Error: " + (e.message || e));
       }
 
       function populateTripForm(trip) {
@@ -131,10 +139,13 @@
           notes: document.getElementById("trip-notes").value
         };
 
-        google.script.run.withSuccessHandler(() => {
-          document.getElementById("loading-overlay").style.display = "none";
-          google.script.run.withSuccessHandler().openPassengerTripList(trip.date);
-        }).updateTripInLog(trip);
+        google.script.run
+          .withSuccessHandler(() => {
+            document.getElementById("loading-overlay").style.display = "none";
+            google.script.run.withSuccessHandler().withFailureHandler(handleError).openPassengerTripList(trip.date);
+          })
+          .withFailureHandler(handleError)
+          .updateTripInLog(trip);
       }
 
       function confirmDelete() {
@@ -163,8 +174,9 @@
           .withSuccessHandler(() => {
             document.getElementById("loading-overlay").style.display = "none";
             const date = document.getElementById("trip-date").value
-            google.script.run.withSuccessHandler().openPassengerTripList(date);
+            google.script.run.withSuccessHandler().withFailureHandler(handleError).openPassengerTripList(date);
           })
+          .withFailureHandler(handleError)
           .deleteTripFromLog(id, date);
       }
     </script>
