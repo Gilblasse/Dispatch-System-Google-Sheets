@@ -1,0 +1,146 @@
+<script>
+  // 🚍 Load all dropdown data (call from DOMContentLoaded)
+  function loadTripFormData() {
+    google.script.run.withSuccessHandler(function (data) {
+      localStorage.setItem("passengerProfiles", JSON.stringify(data)); // ✅ Save to localStorage
+      renderPassengerProfiles(data);
+    }).getPassengerProfiles();
+
+    google.script.run.withSuccessHandler(renderVehicleOptions).getVehicleOptions();
+    google.script.run.withSuccessHandler(renderDriverOptions).getDriverOptions();
+  }
+
+  // 👤 Renders Passenger Names + Options
+  function renderPassengerProfiles(data) {
+    const input = document.getElementById("trip-passenger");
+    const list = document.getElementById("autocomplete-list");
+    const names = Object.keys(data);
+
+    input.addEventListener("input", function () {
+      const query = this.value.toLowerCase();
+      list.innerHTML = "";
+
+      if (!query || query.length < 1) {
+        list.style.display = "none";
+        return;
+      }
+
+      const matches = names.filter(name => name.toLowerCase().includes(query));
+      matches.slice(0, 10).forEach(match => {
+        const li = document.createElement("li");
+        li.textContent = match;
+        li.onclick = () => {
+          input.value = match;
+          list.innerHTML = "";
+          list.style.display = "none";
+
+          syncPassengerProfile(match); // ✅ Reuse sync logic
+        };
+        list.appendChild(li);
+      });
+
+      list.style.display = matches.length ? "block" : "none";
+    });
+  }
+
+  function updateArrayProfileValue(profile, key, element) {
+    if(profile[key].includes(element.value)) {
+      return element.value
+    } 
+
+    return profile[key][0] || ""
+  }
+
+  // 🔁 Pull passenger profile from localStorage and populate fields
+  function syncPassengerProfile(name) {
+    const raw = localStorage.getItem("passengerProfiles");
+    const medicaidInput = document.getElementById("trip-medicaid");
+
+    if (!raw) return;
+
+    const profiles = JSON.parse(raw);
+    const profile = profiles[name];
+    if (!profile) return;
+
+    // Transport
+    document.getElementById("trip-transport").value = profile.type || "";
+
+    // Phones
+    const phoneList = document.getElementById("phone-options");
+    const phoneInput = document.getElementById("trip-phone");
+
+    phoneList.innerHTML = "";
+    phoneInput.value =  updateArrayProfileValue(profile, "phones", phoneInput);
+
+    (profile.phones || []).forEach(p => {
+      const val = p.trim();
+      if (val) {
+        const opt = document.createElement("option");
+        opt.value = val;
+        phoneList.appendChild(opt);
+      }
+    });
+    
+
+    // Medicaid (plain input)
+    let medicaidValues = profile.medicaid || [];
+
+    if (typeof medicaidValues === 'string') {
+      medicaidValues = [medicaidValues];
+    }
+
+    if (medicaidValues.length === 1) {
+      medicaidInput.value = medicaidValues[0];
+    } else {
+      medicaidInput.value = "";
+    }
+    
+    // Addresses
+    const pickupList = document.getElementById("pickup-options");
+    const dropoffList = document.getElementById("dropoff-options");
+    const pickupInput = document.getElementById("trip-pickup");
+    const dropoffInput = document.getElementById("trip-dropoff");
+    pickupList.innerHTML = "";
+    dropoffList.innerHTML = "";
+
+    pickupInput.value = updateArrayProfileValue(profile, "addresses", pickupInput);
+    dropoffInput.value = updateArrayProfileValue(profile, "addresses", dropoffInput);
+
+    (profile.addresses || []).forEach(addr => {
+      const val = addr.trim();
+      if (val.length > 5) {
+        const opt1 = document.createElement("option");
+        const opt2 = document.createElement("option");
+        opt1.value = val;
+        opt2.value = val;
+        pickupList.appendChild(opt1);
+        dropoffList.appendChild(opt2);
+      }
+    });
+  }
+
+  // 🚗 Renders Vehicle Options
+  function renderVehicleOptions(vehicleList) {
+    const datalist = document.getElementById("vehicle-options");
+    datalist.innerHTML = "";
+
+    vehicleList.forEach(v => {
+      const opt = document.createElement("option");
+      opt.value = v.label;
+      opt.setAttribute("data-vehicle-type", v.vehicleType);
+      datalist.appendChild(opt);
+    });
+  }
+
+  // 👨‍✈️ Renders Driver Options
+  function renderDriverOptions(driverList) {
+    const datalist = document.getElementById("driver-options");
+    datalist.innerHTML = "";
+
+    driverList.forEach(driver => {
+      const opt = document.createElement("option");
+      opt.value = driver.label;
+      datalist.appendChild(opt);
+    });
+  }
+</script>

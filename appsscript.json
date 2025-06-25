@@ -1,0 +1,15 @@
+{
+  "timeZone": "America/New_York",
+  "dependencies": {},
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "sheets": {
+    "macros": [
+      {
+        "menuName": "Untitled Macro",
+        "functionName": "UntitledMacro",
+        "defaultShortcut": "Ctrl+Alt+Shift+4"
+      }
+    ]
+  }
+}

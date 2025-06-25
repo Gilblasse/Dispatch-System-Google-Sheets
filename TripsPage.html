@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      color: #1a1a1a;
+      width: 300px;
+      max-width: 300px;
+      font-size: 12px;
+      overflow: hidden;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .menu-btn {
+      background: #e6f0ff;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 14px;
+      color: #1a1a1a;
+      border: 1px solid #aac4f7;
+      cursor: pointer;
+    }
+
+    .dropdown {
+      position: absolute;
+      right: 10px;
+      top: 40px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      padding: 6px 0;
+      z-index: 999;
+      width: 140px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dropdown button {
+      padding: 6px 12px;
+      background: none;
+      border: none;
+      text-align: left;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .dropdown button:hover {
+      background-color: #f0f0f0;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .date-picker {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f9f9f9;
+      padding: 6px 10px;
+      margin: 0 12px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .trip-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 6px 0px;
+      border-bottom: 1px solid #eaeaea;
+      gap: 4px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .trip-card:nth-child(even) {
+      background-color: #f7f9fc;
+    }
+
+    .trip-card:nth-child(odd) {
+      background-color: #ffffff;
+    }
+
+    .trip-info {
+      display: flex;
+      flex-direction: column;
+      max-width: 190px;
+      word-break: break-word;
+    }
+
+    .passenger-name {
+      font-weight: 600;
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+
+    .trip-route {
+      color: #3a3a3a;
+      font-size: 10px;
+      font-weight: 400;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .trip-time {
+      font-size: 12px;
+      color: #2c3e50;
+      white-space: nowrap;
+      font-weight: 500;
+      padding-left: 6px;
+      padding-right: 4px;
+      max-width: 70px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .driver-tag {
+      margin-top: 4px;
+      font-size: 10px;
+      background: #f4f4f4;
+      padding: 2px 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #555;
+    }
+
+    .edit-driver {
+      visibility: hidden;
+      margin-left: auto;
+      color: #007aff;
+      font-weight: 500;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    .trip-card:hover .edit-driver {
+      visibility: visible;
+    }
+
+    input[type="date"] {
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #1a1a1a;
+      width: 130px;
+      text-align: center; /* ✅ center the value */
+    }
+
+
+    .trip-list-scrollable {
+      max-height: calc(100vh - 140px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      margin: 0 10px 12px;
+      padding-right: 2px;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid #ccc;
+      border-top: 2px solid #007aff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .modal.hidden {
+      display: none;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      width: 240px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .modal-message {
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .modal-actions button {
+      flex: 1;
+      padding: 6px 10px;
+      margin: 0 4px;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      background: #007aff;
+      color: white;
+    }
+
+    .modal-actions button:last-child {
+      background: #ccc;
+      color: black;
+    }
+
+    .modal-actions.three-btns {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .modal-actions.three-btns button {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .modal-actions .btn-cancel {
+      background: #ddd;
+      color: #333;
+    }
+
+    .modal-actions .btn-partial {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .modal-actions .btn-full {
+      background: #007aff;
+      color: white;
+    }
+
+    .date-label {
+      font-size: 10px;
+      color: #666;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .divider {
+      height: 1px;
+      background-color: #e0e0e0;
+      margin: 4px 0;
+    }
+
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    .date-picker-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f9f9f9;
+      padding: 6px 10px;
+      margin: 0 12px 12px;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      font-size: 12px;
+    }
+
+    .date-picker-row .date-label {
+      font-size: 12px;
+      color: #666;
+      font-weight: 500;
+      margin-right: 8px;
+      white-space: nowrap;
+    }
+
+    .comment-icon {
+      cursor: pointer;
+      font-size: 10px;
+      color: #007aff;
+    }
+
+
+
+    .status-pending { background-color: rgba(160,160,160,0.25); }
+    .status-complete { background-color: #28a745; }
+    .status-cancel { background-color: #dc3545; }
+    .status-inroute { background-color: yellow; }
+    .status-reassign { background-color: #9b59b6; }
+    .status-notconfirmed { background-color: #b0b0b0; }
+    .status-intransit { background-color: orange; }
+    .status-ready { color: red; }
+    .status-updatetime { color: red; }
+    .status-noshow { color: gray; }
+    .status-waiting { color: blue; }
+    .status-pickuplocation { background: linear-gradient(to right, yellow 50%, blue 50%); }
+    .status-dropofflocation { background: linear-gradient(to right, orange 50%, blue 50%); }
+
+    .driver-section {
+      margin-bottom: 16px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 8px;
+    }
+
+    .driver-header {
+      font-weight: 600;
+      font-size: 12px;
+      margin: 6px 0;
+      color: #2c3e50;
+      background: #8bc34a;
+      padding: 4px 8px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .dropdown button.active-filter {
+      background-color: #e6f0ff;
+      font-weight: 600;
+      color: #007aff;
+    }
+
+    .trip-search-container{
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .trip-search-container button {
+      border: none;
+      cursor: pointer;
+      background-color: white;
+    }
+
+    .trip-search-container button:hover {
+      background-color: #F5F5F5;
+    }
+
+  </style>
+</head>
+<body>
+  <?!= include('loading') ?>
+  <header>
+    <span>Trips</span>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button class="menu-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+      <button class="menu-btn" onclick="toggleFilterMenu(event)">
+        <i class="fas fa-filter"></i>
+      </button>
+
+      <div id="dropdownMenu" class="dropdown hidden">
+        <button onclick="openTripForm()">📅 Add</button>
+        <div class="divider"></div>
+        <button onclick="importTrips()"><i class="fas fa-sync-alt"></i> SYNC</button>
+        <div class="divider"></div>
+        <button onclick="exportTrips()"><i class="fas fa-file-export"></i> Export</button>
+      </div>
+      <div id="filterMenu" class="dropdown hidden">
+        <button onclick="applyFilter('time')">🕒 Filter by Time</button>
+        <button onclick="applyFilter('driver')">🧑‍✈️ Filter by Driver</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="date-picker-row">
+    <span id="date-label" class="date-label">Date</span>
+    <input type="date" id="trip-date" onchange="onDateChange()" />
+  </div>
+
+
+
+  <div class="trip-search-container" style="padding: 0 12px 10px;">
+    <!-- <button onclick="importTrips()"><i class="fas fa-sync-alt"></i></button> -->
+    <input
+      type="text"
+      id="trip-search"
+      placeholder="Search trips..."
+      oninput="debounceSearch()"
+      style="width: 100%; padding: 6px 10px; font-size: 12px; border: 1px solid #ccc; border-radius: 6px;"
+    />
+    <!-- <button onclick="openTripForm()">+</button> -->
+  </div>
+
+
+  <div id="tripList" class="trip-list-scrollable">
+    <div id="loading" style="display: none; padding: 12px; text-align: center; font-size: 12px;">
+      <span class="spinner"></span> Loading trips...
+    </div>
+  </div>
+
+  <div id="snapshot-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-message">
+        How would you like to sync today’s trip data?<br><br>
+        <small>You can fully replace or <strong>(partially</strong> update today’s trips while <strong>preserving your edits)</strong>.</small>
+      </div>
+     <div class="modal-actions three-btns">
+        <button class="btn-cancel" onclick="confirmSnapshot(undefined)">Cancel</button>
+        <button class="btn-partial" onclick="confirmSnapshot(false)">Partial</button>
+        <button class="btn-full" onclick="confirmSnapshot(true)">Full</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const initialDate = <?= JSON.stringify(initialDate) ?>;
+    let currentFilter = 'time';
+    let currentLoadToken = 0;
+    let allTrips = []; // stores raw trip data
+    let searchQuery = ''; // stores current search
+
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const dateInput = document.getElementById("trip-date");
+      const selected = initialDate || new Date().toISOString().split("T")[0];
+      dateInput.valueAsDate = new Date(selected);
+      onDateChange();
+      applyFilter(currentFilter);
+
+      loadTrips(new Date(selected).toISOString().split("T")[0]);
+    });
+
+    document.addEventListener("click", function(event) {
+      const dropdown = document.getElementById("dropdownMenu");
+      const filter = document.getElementById("filterMenu");
+      const isMenuClick = event.target.closest(".menu-btn") || event.target.closest(".dropdown");
+
+      if (!isMenuClick) {
+        dropdown.classList.add("hidden");
+        filter.classList.add("hidden");
+      }
+    });
+
+    function toggleMenu() {
+      document.getElementById("dropdownMenu").classList.toggle("hidden");
+    }
+
+    function toggleFilterMenu() {
+      event.stopPropagation();
+      document.getElementById("filterMenu").classList.toggle("hidden");
+    }
+
+    let searchTimeout;
+    function debounceSearch() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(applySearch, 200);
+    }
+
+
+    function applyFilter(type) {
+      currentFilter = type;
+      const dateInput = document.getElementById("trip-date");
+      loadTrips(dateInput.value);
+
+      // Always hide filter menu
+      const filterMenu = document.getElementById("filterMenu");
+      if (!filterMenu.classList.contains("hidden")) {
+        filterMenu.classList.add("hidden");
+      }
+
+      // Highlight the active filter button
+      const buttons = filterMenu.querySelectorAll("button");
+      buttons.forEach(btn => btn.classList.remove("active-filter"));
+      const activeBtn = Array.from(buttons).find(btn =>
+        btn.textContent.toLowerCase().includes(type)
+      );
+      if (activeBtn) activeBtn.classList.add("active-filter");
+      loadTrips(dateInput.value); // re-fetches trips
+    }
+
+    function onDateChange() {
+      const dateInput = document.getElementById("trip-date");
+      const label = document.getElementById("date-label");
+
+      // Manually parse value as local date (no timezone shift)
+      const parts = dateInput.value.split('-');
+      const selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      selectedDate.setHours(0, 0, 0, 0);
+
+      const diffTime = selectedDate.getTime() - today.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+      let labelText = "Date";
+      if (diffDays === 0) labelText = "Today";
+      else if (diffDays === -1) labelText = "Yesterday";
+      else if (diffDays === 1) labelText = "Tomorrow";
+
+      label.textContent = labelText;
+
+      applyFilter(currentFilter);
+    }
+
+
+
+
+    function pageLoader(isLoading = false) {
+      const display = isLoading ? "flex" : "none";
+      document.getElementById("loading-overlay").style.display = display;
+    }
+
+    function openTripForm() {
+      const dateInput = document.getElementById("trip-date");
+      google.script.run.showAddTripSidebar(dateInput.value);
+    }
+
+    function editTrip(id, date) {
+      google.script.run.showEditTripSidebar(id, date);
+    }
+
+    function exportTrips() {
+      pageLoader(true);
+      const dateInput = document.getElementById("trip-date").value;
+      if (!dateInput) {
+        pageLoader(false);
+        alert("Please select a date first.");
+        return;
+      }
+      if (!confirm("Are you sure you want to Export trips to DISPATCH?")) {
+        pageLoader(false);
+        return;
+      }
+      google.script.run.withSuccessHandler(() => pageLoader(false)).restoreDispatchFromLog(dateInput);
+    }
+
+    function importTrips() {
+      showSnapshotConfirm()
+    }
+
+    function showSnapshotConfirm() {
+      document.getElementById("snapshot-modal").classList.remove("hidden");
+    }
+
+    function sucessAfterSnapShot() {
+      const dateInput = document.getElementById("trip-date");
+      pageLoader(false);
+      loadTrips(dateInput.value);
+    }
+
+    function confirmSnapshot(confirmed) {
+      document.getElementById("snapshot-modal").classList.add("hidden");
+      if(confirmed === undefined) return
+        pageLoader(true);
+
+        if (confirmed) {
+          google.script.run.withSuccessHandler(sucessAfterSnapShot).deleteTodaysLogsThenUpdateSnapshotDispatchToLog();
+        } else {
+          google.script.run.withSuccessHandler(sucessAfterSnapShot).snapshotDispatchToLog();
+        }
+    }
+
+
+    function loadTrips(date) {
+      const container = document.getElementById("tripList");
+      const token = ++currentLoadToken;
+
+      const dateInput = document.getElementById("trip-date");
+      const parts = dateInput.value.split('-');
+      const selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      selectedDate.setHours(0, 0, 0, 0);
+
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+
+      container.innerHTML = `<div id="loading" style="padding: 12px; text-align: center; font-size: 12px;">
+        <span class="spinner"></span> Loading trips...</div>`;
+
+      const proceed = () => {
+       google.script.run.withSuccessHandler(trips => {
+          if (token === currentLoadToken) {
+            allTrips = trips || [];
+            applySearch(); // render based on search
+          }
+        }).getTripsByDate(date);
+      };
+
+      if (selectedDate.getTime() === now.getTime()) {
+        google.script.run.withSuccessHandler(proceed).snapshotDispatchToLog();
+      } else {
+        proceed();
+      }
+    }
+
+
+    function applySearch() {
+      const input = document.getElementById("trip-search");
+      searchQuery = input.value.trim().toLowerCase();
+
+      let filteredTrips = allTrips;
+
+      if (searchQuery) {
+        const normalizedSearch = searchQuery.replace(/\D/g, '');
+        const shouldMatchPhone = normalizedSearch.length > 0;
+
+        filteredTrips = allTrips.filter(trip => {
+          const passenger = String(trip.passenger || '').trim().toLowerCase();
+          const driver = String(trip.driver || '').trim().toLowerCase();
+          const pickup = String(trip.pickup || '').trim().toLowerCase();
+          const dropoff = String(trip.dropoff || '').trim().toLowerCase();
+          const phoneDigits = String(trip.phone || '').replace(/\D/g, '');
+          const medicaid = String(trip.medicaid || '').trim().toLowerCase();
+          const invoice = String(trip.invoice || '').trim().toLowerCase();
+          const id = String(trip.id || '').toLowerCase();
+          const returnOf = String(trip.returnOf || '').toLowerCase();
+
+          const matchLog = {
+            passenger: passenger.includes(searchQuery),
+            driver: driver.includes(searchQuery),
+            pickup: pickup.includes(searchQuery),
+            dropoff: dropoff.includes(searchQuery),
+            phoneDigits: shouldMatchPhone && phoneDigits.includes(normalizedSearch),
+            medicaid: medicaid.includes(searchQuery),
+            invoice: invoice.includes(searchQuery),
+            id: id.includes(searchQuery),
+            returnOf: returnOf.includes(searchQuery)
+          };
+
+          return Object.values(matchLog).some(Boolean);
+        });
+      }
+
+      renderTrips(filteredTrips);
+    }
+
+
+
+
+
+    function cleanLocation(address) {
+      const patterns = ["St\\.?","Rd\\.?","Dr\\.?","Ave\\.?","Terrace","Blvd","Ln\\.?","Way","Pl\\.?","Ct\\.?","Circle"];
+      const regex = new RegExp(`\\b(?:${patterns.join('|')})\\b.*`, 'i');
+      const match = address.match(regex);
+      
+      let cleaned = match
+        ? address.slice(0, match.index + match[0].match(/^\w+/)[0].length)
+        : address.split(',')[0];
+
+      cleaned = cleaned.trim();
+
+      return cleaned.length > 18 ? cleaned.slice(0, 15) + "..." : cleaned;
+    }
+
+
+    function formatTime(dateStr) {
+      const date = new Date(dateStr);
+      return date.valueOf() ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
+    }
+
+    function renderTrips(trips) {
+      const container = document.getElementById("tripList");
+      container.innerHTML = "";
+
+      if (!Array.isArray(trips) || !trips.length) {
+        container.innerHTML = `<div style="padding:12px; text-align:center; font-size:12px;">No trips found for this date.</div>`;
+        return;
+      }
+
+      if (currentFilter === 'driver') {
+        const grouped = trips.reduce((acc, trip) => {
+          const driver = trip.driver || 'Unassigned';
+          if (!acc[driver]) acc[driver] = [];
+          acc[driver].push(trip);
+          return acc;
+        }, {});
+        Object.keys(grouped).forEach(driver => {
+          const section = document.createElement("div");
+          section.className = "driver-section";
+
+          const header = document.createElement("div");
+          header.className = "driver-header";
+          header.innerHTML = `<span>${driver}</span><span>(${grouped[driver].length})</span>`;
+          section.appendChild(header);
+
+          grouped[driver]
+            .sort((a, b) => new Date(a.time) - new Date(b.time))
+            .forEach(trip => {
+              section.appendChild(createTripCard(trip));
+            });
+
+          container.appendChild(section);
+        });
+      } else {
+        trips.sort((a, b) => new Date(a.time) - new Date(b.time)).forEach(trip => {
+          container.appendChild(createTripCard(trip));
+        });
+      }
+    }
+
+    function filterByTripId(id) {
+      const input = document.getElementById("trip-search");
+      input.value = id;
+      applySearch();
+    }
+
+
+
+      function resolveTripStatus(tripStatus, dispatchStatus) {
+    const topDriverStatuses = ["pickuplocation", "dropofflocation", "complete", "intransit", "inroute"];
+    const dispatcherOverrides = ["reassign", "notconfirmed", "ready", "updatetime", "noshow"];
+
+    tripStatus = (tripStatus || "").toLowerCase().replace(/\s+/g, "");
+    dispatchStatus = (dispatchStatus || "").toLowerCase().replace(/\s+/g, "");
+
+    if (tripStatus === "complete") return "complete";
+    if (dispatcherOverrides.includes(dispatchStatus) && !topDriverStatuses.includes(tripStatus)) {
+      return dispatchStatus;
+    }
+    return tripStatus;
+  }
+
+  function createTripCard(trip) {
+    const dispatcherSuppressions = ["ready", "noshow", "cancel"];
+
+    const dispatchStatus = (trip.dispatchStatus || "").toLowerCase().replace(/\s+/g, '');
+    const tripStatus = (trip.status || "").toLowerCase().replace(/\s+/g, '');
+    const resolvedStatus = resolveTripStatus(tripStatus, dispatchStatus);
+
+    const isDriverStatusSuppressed = dispatcherSuppressions.includes(dispatchStatus);
+    const isDispatcherPending = ["ready", "noshow"].includes(resolvedStatus) && tripStatus !== "complete" && !["inroute", "intransit", "pickuplocation", "dropofflocation"].includes(tripStatus);
+    const isTimePending = resolvedStatus === "updatetime" && tripStatus !== "complete" && !["inroute", "intransit", "pickuplocation", "dropofflocation"].includes(tripStatus);
+    const isWaiting = resolvedStatus === "waiting" && !isDriverStatusSuppressed;
+
+    const passengerClass = isDispatcherPending ? `status-${resolvedStatus}` : '';
+    const timeClass = isTimePending ? `status-${resolvedStatus}` : '';
+    const driverClass = isWaiting ? 'status-waiting' : '';
+    const statusDotClass = (isDispatcherPending || isTimePending || isWaiting)
+      ? 'status-pending'
+      : `status-${resolvedStatus || 'pending'}`;
+
+    const card = document.createElement("div");
+    card.className = "trip-card";
+    const isReturn = !!trip.returnOf;
+
+    card.innerHTML = `
+      <div class="trip-info">
+        <div class="passenger-name ${passengerClass}">${trip.passenger}</div>
+        <div class="trip-route">
+          ${cleanLocation(trip.pickup)}
+          <a href="http://maps.google.com/maps/dir/${encodeURIComponent(trip.pickup)}/${encodeURIComponent(trip.dropoff)}" target="_blank" rel="noopener noreferrer" title="Open in Google Maps" style="text-decoration: none; margin: 0 4px;">→</a>
+          ${cleanLocation(trip.dropoff)}
+        </div>
+        <div class="driver-tag">
+          <span class="status-dot ${statusDotClass}"></span>
+          <span class="${driverClass}">${trip.driver}</span>
+          ${trip?.notes?.length ? `<span class="comment-icon" title="${trip.notes.replace(/"/g, '&quot;')}">💬</span>` : ''}
+          ${isReturn ? `<span class="comment-icon" title="Show linked original trip" onclick="filterByTripId('${trip.returnOf}')">🔁 Return</span>` : ''}
+          <span class="edit-driver" onclick="editTrip('${trip.id}', '${trip.date}')">✏️</span>
+        </div>
+      </div>
+      <div class="trip-time ${timeClass}">${formatTime(trip.time)}</div>
+    `;
+
+    return card;
+  }
+
+  </script>
+</body>
+</html>

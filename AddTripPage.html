@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <?!= include('TripStyles') ?>
+  </head>
+  <body>
+    <?!= include('loading') ?>
+
+    <div class="trip-form">
+      <div class="header-row">
+        <span class="back-button" title="Back" onclick="goBack()">←</span>
+        <h2>Add Trip</h2>
+      </div>
+
+      <?!= include('TripFormFields') ?>
+
+      <button onclick="submitNewTrip()" class="save-button">➕ Add Trip</button>
+    </div>
+
+    <?!= include('SharedLoaders') ?>
+
+    <script>
+      const initialDate = <?= JSON.stringify(initialDate) ?>;
+      let passengerProfiles = {};
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const date = JSON.parse(initialDate) || new Date().toISOString().slice(0, 10);
+        document.getElementById("trip-date").value = date;
+
+        loadTripFormData(); // 🔁 Load dropdowns and cache profiles
+
+        // ⏳ Give time for form fields to render before syncing
+        setTimeout(() => {
+          const name = document.getElementById("trip-passenger").value;
+          if (name) syncPassengerProfile(name);
+        }, 150);
+      });
+
+
+      function goBack() {
+        const date = document.getElementById("trip-date").value;
+        google.script.run.openPassengerTripList(date);
+      }
+
+      function addHoursToTime(timeStr, hoursToAdd) {
+        const [hh, mm] = timeStr.split(':');
+        const date = new Date();
+        date.setHours(parseInt(hh), parseInt(mm), 0, 0);
+        date.setHours(date.getHours() + hoursToAdd);
+        return date.toTimeString().slice(0, 5);
+      }
+
+      function toggleReturnTime() {
+        const checkbox = document.getElementById("return-trip-checkbox");
+        const returnTimeInput = document.getElementById("return-trip-time");
+        const returnContainer = document.getElementById("return-time-container");
+
+        if (checkbox.checked) {
+          returnContainer.style.display = "block";
+
+          const mainTime = document.getElementById("trip-time").value || "09:00";
+          returnTimeInput.value = addHoursToTime(mainTime, 4);
+        } else {
+          returnContainer.style.display = "none";
+          returnTimeInput.value = "";
+        }
+      }
+
+
+      function submitNewTrip() {
+        document.getElementById("loading-overlay").style.display = "flex";
+
+        const date = document.getElementById("trip-date").value;
+        const passenger = document.getElementById("trip-passenger").value;
+
+        if (!date || !passenger) {
+          alert("🚫 Date and Passenger are required.");
+          document.getElementById("loading-overlay").style.display = "none";
+          return;
+        }
+
+        const todayStr = new Date().toISOString().slice(0, 10);
+        if (date < todayStr) {
+          alert("🚫 Cannot add a trip in the past.");
+          document.getElementById("loading-overlay").style.display = "none";
+          return;
+        }
+
+        const time = document.getElementById("trip-time").value || "23:58";
+        const pickup = document.getElementById("trip-pickup").value || "";
+        const dropoff = document.getElementById("trip-dropoff").value || "";
+        const driver = document.getElementById("trip-driver").value || "";
+
+        const trip = {
+          id: `${driver}|${date}|${time}|${passenger}|${pickup}`,
+          date,
+          time,
+          passenger,
+          phone: document.getElementById("trip-phone").value || "",
+          medicaid: document.getElementById("trip-medicaid").value || "",
+          invoice: document.getElementById("trip-invoice").value || "",
+          transport: document.getElementById("trip-transport").value || "",
+          pickup,
+          dropoff,
+          vehicle: document.getElementById("trip-vehicle").value || "",
+          driver,
+          status: document.getElementById("trip-status").value || "",
+          notes: document.getElementById("trip-notes").value || ""
+        };
+
+        const isReturnTrip = document.getElementById("return-trip-checkbox")?.checked;
+        const returnTime = document.getElementById("return-trip-time")?.value;
+
+        // ✅ If return trip is checked but no time is provided
+        if (isReturnTrip && !returnTime) {
+          alert("🚫 Please enter a return trip time.");
+          document.getElementById("loading-overlay").style.display = "none";
+          return;
+        }
+
+        // ✅ Submit both trips if needed
+        google.script.run
+          .withSuccessHandler(() => {
+            if (isReturnTrip && returnTime) {
+              const returnTrip = {
+                ...trip,
+                id: `${driver}|${date}|${returnTime}|${passenger}|${dropoff}`,
+                date, // ✅ ensure date is explicitly passed
+                time: returnTime,
+                pickup: dropoff,
+                dropoff: pickup,
+                notes: (trip.notes || "") + " [RETURN TRIP]",
+                returnOf: trip.id
+              };
+              google.script.run.withSuccessHandler(()=>{
+                document.getElementById("loading-overlay").style.display = "none";
+                google.script.run.withSuccessHandler().openPassengerTripList(date);
+              }).addTripToLog(returnTrip);
+            } else {
+              document.getElementById("loading-overlay").style.display = "none";
+              google.script.run.withSuccessHandler().openPassengerTripList(date);
+            }
+        }).addTripToLog(trip);
+      }
+
+    </script>
+  </body>
+</html>

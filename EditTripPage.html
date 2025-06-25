@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <?!= include('TripStyles') ?>
+  </head>
+  <body>
+    <?!= include('loading') ?>
+
+    <div class="trip-form">
+      <div class="header-row">
+        <span class="back-button" title="Back" onclick="goBack()">←</span>
+        <h2>Edit Trip</h2>
+        <span class="delete-icon" style="display:none;" title="Delete Trip" onclick="confirmDelete()">🗑️</span>
+      </div>
+
+      <?!= include('TripFormFields') ?>
+
+      <button class="save-button" style="display:none;" onclick="submitTrip()">💾 Save Trip</button>
+
+    </div>
+
+    <?!= include('SharedLoaders') ?>
+
+    <script>
+      const rawTripId = <?= JSON.stringify(tripId) ?>.replace(/^"+|"+$/g, '');
+      const rawTripDate = <?= JSON.stringify(tripDate) ?>.replace(/^"+|"+$/g, '');
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const parsedTrip = { id: rawTripId, date: rawTripDate };
+        const safeId = encodeURIComponent(parsedTrip.id);
+        const safeDate = rawTripDate ? formatDateString(new Date(rawTripDate)) : "";
+
+        document.getElementById("loading-overlay").style.display = "flex";
+        google.script.run.withSuccessHandler(populateTripForm).getTripById(safeId, safeDate);
+
+        loadTripFormData(); // 🔁 Load passengers, vehicles, and drivers
+      });
+
+
+      function toggleSaveButtonVisibility(tripDate) {
+        const saveButton = document.querySelector(".save-button");
+        const deleteButton = document.querySelector(".delete-icon");
+        
+        if (!saveButton || !tripDate) return;
+
+        // Parse selected date
+        const parts = tripDate.split("-");
+        const selectedDate = new Date(parts[0], parts[1] - 1, parts[2]);
+        selectedDate.setHours(0, 0, 0, 0);
+
+        // Get today's date
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+
+        const isEditable = selectedDate >= now;
+
+        // ✅ SHOW only if editable
+        saveButton.style.display = isEditable ? "block" : "none";
+        deleteButton.style.display = isEditable ? "block" : "none";
+      }
+
+
+      function formatDateString(date) {
+        return new Date(date).toISOString().slice(0, 10);
+      }
+
+      function stripQuotes(str) {
+        return typeof str === 'string' ? str.replace(/^"+|"+$/g, '').trim() : str;
+      }
+
+      function formatTime(dateStr) {
+        return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+
+      function convertISOStringToTimeInput(isoString) {
+        const date = new Date(isoString);
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${hours}:${minutes}`;
+      }
+
+      function goBack() {
+        const date = document.getElementById("trip-date").value
+        google.script.run.withSuccessHandler().openPassengerTripList(date);
+      }
+
+      function populateTripForm(trip) {
+        const time = convertISOStringToTimeInput(trip.time);
+        const tripDate = trip.date ? (formatDateString(trip.date) || '') : '';
+        
+        toggleSaveButtonVisibility(tripDate);
+        document.getElementById("loading-overlay").style.display = "none";
+
+        document.getElementById("trip-id").value = trip.id || '';
+        document.getElementById("trip-date").value = tripDate;
+        document.getElementById("trip-time").value = time || '';
+        document.getElementById("trip-passenger").value = trip.passenger || '';
+        syncPassengerProfile(trip.passenger || ''); // ✅ Add this line
+
+        document.getElementById("trip-phone").value = trip.phone || '';
+        document.getElementById("trip-medicaid").value = trip.medicaid || '';
+        document.getElementById("trip-invoice").value = trip.invoice || '';
+        document.getElementById("trip-transport").value = trip.transport || '';
+        document.getElementById("trip-pickup").value = trip.pickup || '';
+        document.getElementById("trip-dropoff").value = trip.dropoff || '';
+        document.getElementById("trip-vehicle").value = trip.vehicle || '';
+        document.getElementById("trip-driver").value = trip.driver || '';
+        document.getElementById("trip-status").value = trip.status || '';
+        document.getElementById("trip-notes").value = trip.notes || '';
+      }
+
+
+      function submitTrip() {
+        document.getElementById("loading-overlay").style.display = "flex";
+
+        const trip = {
+          id: document.getElementById("trip-id").value,
+          date: document.getElementById("trip-date").value,
+          time: document.getElementById("trip-time").value,
+          passenger: document.getElementById("trip-passenger").value,
+          phone: document.getElementById("trip-phone").value,
+          medicaid: document.getElementById("trip-medicaid").value,
+          invoice: document.getElementById("trip-invoice").value,
+          transport: document.getElementById("trip-transport").value,
+          pickup: document.getElementById("trip-pickup").value,
+          dropoff: document.getElementById("trip-dropoff").value,
+          vehicle: document.getElementById("trip-vehicle").value,
+          driver: document.getElementById("trip-driver").value,
+          status: document.getElementById("trip-status").value,
+          notes: document.getElementById("trip-notes").value
+        };
+
+        google.script.run.withSuccessHandler(() => {
+          document.getElementById("loading-overlay").style.display = "none";
+          google.script.run.withSuccessHandler().openPassengerTripList(trip.date);
+        }).updateTripInLog(trip);
+      }
+
+      function confirmDelete() {
+        document.getElementById("loading-overlay").style.display = "flex";
+        const confirmed = confirm("Are you sure you want to delete this trip?");
+        if (!confirmed) {
+          document.getElementById("loading-overlay").style.display = "none";
+          return;
+        }
+
+        const id = document.getElementById("trip-id").value;
+        const date = document.getElementById("trip-date").value
+
+        if (!id) {
+          document.getElementById("loading-overlay").style.display = "none";
+          return;
+        }
+
+        if (!date) {
+          document.getElementById("loading-overlay").style.display = "none";
+          alert("Date must be provided")
+          return;
+        }
+
+        google.script.run
+          .withSuccessHandler(() => {
+            document.getElementById("loading-overlay").style.display = "none";
+            const date = document.getElementById("trip-date").value
+            google.script.run.withSuccessHandler().openPassengerTripList(date);
+          })
+          .deleteTripFromLog(id, date);
+      }
+    </script>
+  </body>
+</html>
