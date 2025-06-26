@@ -45,8 +45,6 @@
 
       function handleError(e) {
         document.getElementById("loading-overlay").style.display = "none";
-        const msg = document.getElementById("loading-message");
-        if (msg) msg.textContent = "Loading...";
         alert("Error: " + (e.message || e));
       }
 
@@ -108,7 +106,7 @@
         return new Date(y, m - 1, d);
       }
 
-      async function expandStandingOrder(trip) {
+      function expandStandingOrder(trip) {
         if (!trip.standing) return [trip];
         const { startDate, endDate, frequency, days = [] } = trip.standing;
         if (!startDate || !endDate) return [trip];
@@ -116,11 +114,7 @@
         const end = parseLocalDate(endDate);
         const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
         const results = [];
-        const msg = document.getElementById("loading-message");
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-          const dateStr = d.toISOString().slice(0, 10);
-          if (msg) msg.textContent = `Building standing order for ${dateStr}`;
-          await new Promise(r => setTimeout(r, 0));
           const dayName = dayNames[d.getDay()];
           const diffDays = Math.floor((d - start) / 86400000);
           let include = false;
@@ -148,6 +142,7 @@
               include = true;
           }
           if (include) {
+            const dateStr = d.toISOString().slice(0, 10);
             results.push({
               ...trip,
               date: dateStr,
@@ -159,11 +154,8 @@
       }
 
 
-      async function submitNewTrip() {
-        const overlay = document.getElementById("loading-overlay");
-        const msg = document.getElementById("loading-message");
-        overlay.style.display = "flex";
-        if (msg) msg.textContent = "Loading...";
+      function submitNewTrip() {
+        document.getElementById("loading-overlay").style.display = "flex";
 
         const date = document.getElementById("trip-date").value;
         const passenger = document.getElementById("trip-passenger").value;
@@ -205,7 +197,6 @@
 
         const isStandingOrder = document.getElementById("standing-order-checkbox")?.checked;
         if (isStandingOrder) {
-          if (msg) msg.textContent = "Building standing order...";
           trip.standing = {
             frequency: document.getElementById("standing-frequency").value,
             startDate: document.getElementById("standing-start-date").value,
@@ -225,8 +216,7 @@
           return;
         }
 
-        const expanded = await expandStandingOrder(trip);
-        if (msg) msg.textContent = "Loading...";
+        const expanded = expandStandingOrder(trip);
         const tripsToSave = [];
         expanded.forEach(t => {
           tripsToSave.push(t);
@@ -250,8 +240,6 @@
         google.script.run
           .withSuccessHandler(() => {
             document.getElementById("loading-overlay").style.display = "none";
-            const m = document.getElementById("loading-message");
-            if (m) m.textContent = "Loading...";
             google.script.run.withSuccessHandler().withFailureHandler(handleError).openPassengerTripList(date);
           })
           .withFailureHandler(handleError)
