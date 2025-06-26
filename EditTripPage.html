@@ -25,6 +25,7 @@
     <script>
       const rawTripId = <?= JSON.stringify(tripId) ?>.replace(/^"+|"+$/g, '');
       const rawTripDate = <?= JSON.stringify(tripDate) ?>.replace(/^"+|"+$/g, '');
+      let currentTrip = null;
 
       document.addEventListener("DOMContentLoaded", () => {
         const parsedTrip = { id: rawTripId, date: rawTripDate };
@@ -94,6 +95,7 @@
       }
 
       function populateTripForm(trip) {
+        currentTrip = trip;
         const time = convertISOStringToTimeInput(trip.time);
         const tripDate = trip.date ? (formatDateString(trip.date) || '') : '';
         
@@ -150,14 +152,9 @@
 
       function confirmDelete() {
         document.getElementById("loading-overlay").style.display = "flex";
-        const confirmed = confirm("Are you sure you want to delete this trip?");
-        if (!confirmed) {
-          document.getElementById("loading-overlay").style.display = "none";
-          return;
-        }
 
         const id = document.getElementById("trip-id").value;
-        const date = document.getElementById("trip-date").value
+        const date = document.getElementById("trip-date").value;
 
         if (!id) {
           document.getElementById("loading-overlay").style.display = "none";
@@ -166,18 +163,38 @@
 
         if (!date) {
           document.getElementById("loading-overlay").style.display = "none";
-          alert("Date must be provided")
+          alert("Date must be provided");
           return;
         }
 
-        google.script.run
+        let deleteAll = false;
+        if (currentTrip && currentTrip.standing && Object.keys(currentTrip.standing).length) {
+          deleteAll = confirm("This trip is part of a standing order.\nPress OK to delete the entire standing order, or Cancel to delete only this trip.");
+          const msg = deleteAll ? "Are you sure you want to delete the entire standing order?" : "Are you sure you want to delete this trip?";
+          if (!confirm(msg)) {
+            document.getElementById("loading-overlay").style.display = "none";
+            return;
+          }
+        } else {
+          if (!confirm("Are you sure you want to delete this trip?")) {
+            document.getElementById("loading-overlay").style.display = "none";
+            return;
+          }
+        }
+
+        const runner = google.script.run
           .withSuccessHandler(() => {
             document.getElementById("loading-overlay").style.display = "none";
-            const date = document.getElementById("trip-date").value
-            google.script.run.withSuccessHandler().withFailureHandler(handleError).openPassengerTripList(date);
+            const d = document.getElementById("trip-date").value;
+            google.script.run.withSuccessHandler().withFailureHandler(handleError).openPassengerTripList(d);
           })
-          .withFailureHandler(handleError)
-          .deleteTripFromLog(id, date);
+          .withFailureHandler(handleError);
+
+        if (deleteAll) {
+          runner.deleteStandingOrder(currentTrip.standing);
+        } else {
+          runner.deleteTripFromLog(id, date);
+        }
       }
     </script>
   </body>

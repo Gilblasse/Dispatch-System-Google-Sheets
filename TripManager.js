@@ -310,6 +310,18 @@ class TripManager {
     this.dateIndex[targetDate] = rowIndex;
     saveDateIndex(this.dateIndex);
   }
+
+  deleteStandingOrder(standing) {
+    if (!standing) return;
+    const allTrips = this.getAllTrips();
+    const target = JSON.stringify(standing);
+    allTrips.forEach(trip => {
+      const st = JSON.stringify(trip.standing || {});
+      if (st === target) {
+        this.deleteTripFromLog(trip.id, trip.date);
+      }
+    });
+  }
 }
 
 const tripManager = new TripManager(spreadsheetService, logManager);
@@ -320,3 +332,4 @@ function getTripById(encodedId, date) { return tripManager.getTripById(encodedId
 function getAllTrips() { return tripManager.getAllTrips(); }
 function updateTripInLog(trip) { return tripManager.updateTripInLog(trip); }
 function deleteTripFromLog(id, date) { return tripManager.deleteTripFromLog(id, date); }
+function deleteStandingOrder(standing) { return tripManager.deleteStandingOrder(standing); }
