@@ -143,4 +143,56 @@
       datalist.appendChild(opt);
     });
   }
+
+  function parseLocalDate(dateStr) {
+    if (!dateStr) return new Date(NaN);
+    const [y, m, d] = dateStr.split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  function expandStandingOrder(trip) {
+    if (!trip || !trip.standing) return trip && trip.date ? [trip.date] : [];
+
+    const { startDate, endDate, frequency, days = [] } = trip.standing;
+    if (!startDate || !endDate) return trip.date ? [trip.date] : [];
+
+    const start = parseLocalDate(startDate);
+    const end = parseLocalDate(endDate);
+    const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+    const results = [];
+
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const dayName = dayNames[d.getDay()];
+      const diffDays = Math.floor((d - start) / 86400000);
+      let include = false;
+      switch (frequency) {
+        case "DAILY":
+          include = true;
+          break;
+        case "WEEKDAYS":
+          include = d.getDay() >= 1 && d.getDay() <= 5;
+          break;
+        case "WEEKENDS":
+          include = d.getDay() === 0 || d.getDay() === 6;
+          break;
+        case "WEEKLY":
+          include = days.length ? days.includes(dayName) : dayName === dayNames[start.getDay()];
+          break;
+        case "BIWEEKLY":
+          include = (days.length ? days.includes(dayName) : dayName === dayNames[start.getDay()]) && Math.floor(diffDays / 7) % 2 === 0;
+          break;
+        case "MONTHLY":
+          include = d.getDate() === start.getDate();
+          if (days.length) include = include && days.includes(dayName);
+          break;
+        default:
+          include = true;
+      }
+      if (include) {
+        results.push(d.toISOString().slice(0, 10));
+      }
+    }
+
+    return results;
+  }
 </script>
