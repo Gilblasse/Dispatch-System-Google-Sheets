@@ -100,6 +100,53 @@
         }
       }
 
+      function expandStandingOrder(trip) {
+        if (!trip.standing) return [trip];
+        const { startDate, endDate, frequency, days = [] } = trip.standing;
+        if (!startDate || !endDate) return [trip];
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+        const results = [];
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          const dayName = dayNames[d.getDay()];
+          const diffDays = Math.floor((d - start) / 86400000);
+          let include = false;
+          switch (frequency) {
+            case "DAILY":
+              include = true;
+              break;
+            case "WEEKDAYS":
+              include = d.getDay() >= 1 && d.getDay() <= 5;
+              break;
+            case "WEEKENDS":
+              include = d.getDay() === 0 || d.getDay() === 6;
+              break;
+            case "WEEKLY":
+              include = days.length ? days.includes(dayName) : dayName === dayNames[start.getDay()];
+              break;
+            case "BIWEEKLY":
+              include = (days.length ? days.includes(dayName) : dayName === dayNames[start.getDay()]) && Math.floor(diffDays / 7) % 2 === 0;
+              break;
+            case "MONTHLY":
+              include = d.getDate() === start.getDate();
+              if (days.length) include = include && days.includes(dayName);
+              break;
+            default:
+              include = true;
+          }
+          if (include) {
+            const dateStr = d.toISOString().slice(0, 10);
+            results.push({
+              ...trip,
+              date: dateStr,
+              id: `${trip.driver}|${dateStr}|${trip.time}|${trip.passenger}|${trip.pickup}`
+            });
+          }
+        }
+        return results;
+      }
+
 
       function submitNewTrip() {
         document.getElementById("loading-overlay").style.display = "flex";
@@ -163,37 +210,34 @@
           return;
         }
 
-        // ✅ Submit both trips if needed
+        const expanded = expandStandingOrder(trip);
+        const tripsToSave = [];
+        expanded.forEach(t => {
+          tripsToSave.push(t);
+          if (isReturnTrip && returnTime) {
+            const rt = {
+              ...t,
+              id: `${driver}|${t.date}|${returnTime}|${passenger}|${dropoff}`,
+              time: returnTime,
+              pickup: dropoff,
+              dropoff: pickup,
+              notes: (t.notes || "") + " [RETURN TRIP]",
+              returnOf: t.id
+            };
+            if (isStandingOrder) {
+              rt.standing = { ...t.standing };
+            }
+            tripsToSave.push(rt);
+          }
+        });
+
         google.script.run
           .withSuccessHandler(() => {
-            if (isReturnTrip && returnTime) {
-              const returnTrip = {
-                ...trip,
-                id: `${driver}|${date}|${returnTime}|${passenger}|${dropoff}`,
-                date, // ✅ ensure date is explicitly passed
-                time: returnTime,
-                pickup: dropoff,
-                dropoff: pickup,
-                notes: (trip.notes || "") + " [RETURN TRIP]",
-                returnOf: trip.id
-              };
-              if (isStandingOrder) {
-                returnTrip.standing = { ...trip.standing };
-              }
-              google.script.run
-                .withSuccessHandler(() => {
-                  document.getElementById("loading-overlay").style.display = "none";
-                  google.script.run.withSuccessHandler().withFailureHandler(handleError).openPassengerTripList(date);
-                })
-                .withFailureHandler(handleError)
-                .addTripToLog(returnTrip);
-            } else {
-              document.getElementById("loading-overlay").style.display = "none";
-              google.script.run.withSuccessHandler().withFailureHandler(handleError).openPassengerTripList(date);
-            }
-        })
+            document.getElementById("loading-overlay").style.display = "none";
+            google.script.run.withSuccessHandler().withFailureHandler(handleError).openPassengerTripList(date);
+          })
           .withFailureHandler(handleError)
-          .addTripToLog(trip);
+          .addTripToLog(tripsToSave);
       }
 
     </script>
