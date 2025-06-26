@@ -8,23 +8,28 @@ class TripsTest {
     const service = new SpreadsheetService({ Dispatcher: ss.getId() });
     const manager = new TripManager(service, logManager);
 
-    const standing = { key: 'STANDING1' };
+    const standing = {
+      frequency: 'DAILY',
+      startDate: '2024-06-01',
+      endDate: '2024-06-05',
+      days: ['MO', 'TU', 'WE', 'TH', 'FR']
+    };
 
     const baseTrip = {
-      startTime: '',
+      date: '2024-06-01',
       time: '09:00',
-      passenger: '',
-      transport: '',
-      phone: '',
-      medicaid: '',
-      invoice: '',
-      pickup: '',
-      dropoff: '',
+      passenger: 'Test Passenger',
+      transport: 'Test Transport',
+      phone: '555-0000',
+      medicaid: 'MED123',
+      invoice: 'test',
+      pickup: 'Home',
+      dropoff: 'Clinic',
       status: '',
       vehicle: '',
       driver: '',
-      notes: '',
-      returnOf: '',
+      notes: 'This is a TEST !!!',
+      returnOf: 'orig',
       previousId: '',
       standing
     };
