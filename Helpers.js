@@ -151,7 +151,7 @@ function tripObjectToRowArray(trip) {
 function convertRawData(value) {
   const rawTrips = JSON.parse(value || "[]");
   return rawTrips.map(tripRow => ({
-    date: tripRow[0],           // A: Date
+    date: formatDateString(tripRow[0]),           // A: Date
     startTime: tripRow[1],      // B: Start Time
     time: tripRow[2],           // C: Time
     passenger: tripRow[3],      // D: Passenger
