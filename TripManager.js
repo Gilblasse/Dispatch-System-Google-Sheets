@@ -331,6 +331,14 @@ class TripManager {
     const target = JSON.stringify(standing);
     allTrips.forEach(trip => {
       const obj = Array.isArray(trip) ? this.logManager.rowToTrip(trip) : trip;
+      console.log(
+        obj,
+        JSON.stringify(obj.standing || {}),
+        target,
+        Utils.formatDateString(obj.date),
+        JSON.stringify(obj.standing || {}) === target &&
+          normalizedDates.includes(Utils.formatDateString(obj.date))
+      );
       if (
         JSON.stringify(obj.standing || {}) === target &&
         normalizedDates.includes(Utils.formatDateString(obj.date))
