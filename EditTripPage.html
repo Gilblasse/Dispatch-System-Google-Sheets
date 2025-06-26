@@ -184,9 +184,17 @@
 
         const runner = google.script.run
           .withSuccessHandler(() => {
-            document.getElementById("loading-overlay").style.display = "none";
             const d = document.getElementById("trip-date").value;
-            google.script.run.withSuccessHandler().withFailureHandler(handleError).openPassengerTripList(d);
+            google.script.run
+              .withSuccessHandler(() => {
+                document.getElementById("loading-overlay").style.display = "none";
+                google.script.run
+                  .withSuccessHandler()
+                  .withFailureHandler(handleError)
+                  .openPassengerTripList(d);
+              })
+              .withFailureHandler(handleError)
+              .snapshotDispatchToLog();
           })
           .withFailureHandler(handleError);
 
