@@ -39,6 +39,20 @@
       let currentTrip = null;
 
       document.addEventListener("DOMContentLoaded", () => {
+        // Hide add-trip only checkboxes
+        const rtInput = document.getElementById("return-trip-checkbox");
+        if (rtInput && rtInput.parentElement && rtInput.parentElement.parentElement) {
+          rtInput.parentElement.parentElement.style.display = "none";
+        }
+        const rtContainer = document.getElementById("return-time-container");
+        if (rtContainer) rtContainer.style.display = "none";
+        const soInput = document.getElementById("standing-order-checkbox");
+        if (soInput && soInput.parentElement && soInput.parentElement.parentElement) {
+          soInput.parentElement.parentElement.style.display = "none";
+        }
+        const soContainer = document.getElementById("standing-order-container");
+        if (soContainer) soContainer.style.display = "none";
+
         const parsedTrip = { id: rawTripId, date: rawTripDate };
         const safeId = encodeURIComponent(parsedTrip.id);
         const safeDate = rawTripDate ? formatDateString(new Date(rawTripDate)) : "";
