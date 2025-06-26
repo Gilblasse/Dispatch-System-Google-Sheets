@@ -140,7 +140,8 @@ function tripObjectToRowArray(trip) {
     trip.notes || "",                  // Y
     "", "", "", "", "",                // Z - AD
     trip.returnOf || "",               // AE (index 30)
-    trip.previousId || ""              // AF (index 31)
+    trip.previousId || "",             // AF (index 31)
+    JSON.stringify(trip.standing || {}) // AG (index 32)
   ];
 }
 
@@ -166,7 +167,9 @@ function convertRawData(value) {
     driver: tripRow[20],        // U: DRIVER
     id: tripRow[23],            // X: UUID
     notes: tripRow[24],         // Y: Notes
-    returnOf: tripRow[30] || "" // AE: returnOf
+    returnOf: tripRow[30] || "", // AE: returnOf
+    previousId: tripRow[31] || "", // AF
+    standing: (() => { try { return JSON.parse(tripRow[32] || '{}'); } catch (e) { return {}; } })()
   }));
 }
 
@@ -187,7 +190,8 @@ function convertRowToTrip(row) {
     id: row[23],                       // X
     notes: row[24],                    // Y
     returnOf: row[30] || "",           // AE
-    previousId: row[31] || ""          // AF
+    previousId: row[31] || "",         // AF
+    standing: (() => { try { return JSON.parse(row[32] || '{}'); } catch (e) { return {}; } })()
   };
 }
 
@@ -208,6 +212,7 @@ function dispatchRowToTripObject(row) {
     notes: row[22],              // W: Notes
     returnOf: row[30] || "",     // AE: returnOf (optional)
     status: row[24] || "",       // Y: Status
+    standing: (() => { try { return JSON.parse(row[32] || '{}'); } catch (e) { return {}; } })()
   };
 }
 

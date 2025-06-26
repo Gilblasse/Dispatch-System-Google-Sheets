@@ -72,6 +72,34 @@
         }
       }
 
+      function toggleStandingOrder() {
+        const box = document.getElementById("standing-order-checkbox");
+        const container = document.getElementById("standing-order-container");
+        container.style.display = box.checked ? "block" : "none";
+        if (box.checked) {
+          const rt = document.getElementById("return-trip-checkbox");
+          if (rt && !rt.checked) {
+            rt.checked = true;
+            toggleReturnTime();
+          }
+          const start = document.getElementById("standing-start-date");
+          if (start && !start.value) {
+            start.value = document.getElementById("trip-date").value;
+          }
+        }
+      }
+
+      function toggleCustomDays() {
+        const freq = document.getElementById("standing-frequency").value;
+        const days = document.getElementById("custom-days");
+        days.style.display = ["WEEKLY", "BIWEEKLY", "MONTHLY"].includes(freq)
+          ? "block"
+          : "none";
+        if (days.style.display === "none") {
+          days.querySelectorAll("input[type=checkbox]").forEach(c => (c.checked = false));
+        }
+      }
+
 
       function submitNewTrip() {
         document.getElementById("loading-overlay").style.display = "flex";
@@ -114,6 +142,17 @@
           notes: document.getElementById("trip-notes").value || ""
         };
 
+        const isStandingOrder = document.getElementById("standing-order-checkbox")?.checked;
+        if (isStandingOrder) {
+          trip.standing = {
+            frequency: document.getElementById("standing-frequency").value,
+            startDate: document.getElementById("standing-start-date").value,
+            endDate: document.getElementById("standing-end-date").value,
+            days: Array.from(document.querySelectorAll("#custom-days input:checked"))
+              .map(cb => cb.value)
+          };
+        }
+
         const isReturnTrip = document.getElementById("return-trip-checkbox")?.checked;
         const returnTime = document.getElementById("return-trip-time")?.value;
 
@@ -138,6 +177,9 @@
                 notes: (trip.notes || "") + " [RETURN TRIP]",
                 returnOf: trip.id
               };
+              if (isStandingOrder) {
+                returnTrip.standing = { ...trip.standing };
+              }
               google.script.run
                 .withSuccessHandler(() => {
                   document.getElementById("loading-overlay").style.display = "none";

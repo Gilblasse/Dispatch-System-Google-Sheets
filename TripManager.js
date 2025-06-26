@@ -108,6 +108,9 @@ class TripManager {
       }
     }
     const newRow = this.logManager.tripToRow(trip);
+    if (trip.standing) {
+      newRow[32] = JSON.stringify(trip.standing);
+    }
     trips = trips.filter(t => t[23] !== trip.id);
     trips.push(newRow);
     const sorted = sortTripsByTime(trips);

@@ -81,6 +81,41 @@
     <input type="time" id="return-trip-time" class="trip-input" />
   </div>
 
+  <div style="margin-top: 12px;">
+    <label>
+      <input type="checkbox" id="standing-order-checkbox" onchange="toggleStandingOrder()" />
+      Standing order
+    </label>
+  </div>
+
+  <div id="standing-order-container" style="display:none;margin-top:8px;">
+    <label>Frequency</label>
+    <select id="standing-frequency" class="trip-input" onchange="toggleCustomDays()">
+      <option value="DAILY">Daily</option>
+      <option value="WEEKDAYS">Weekdays (Mon–Fri)</option>
+      <option value="WEEKENDS">Weekends</option>
+      <option value="WEEKLY">Weekly</option>
+      <option value="BIWEEKLY">Bi-weekly</option>
+      <option value="MONTHLY">Monthly</option>
+    </select>
+
+    <div id="custom-days" style="display:none;margin-top:8px;">
+      <label><input type="checkbox" value="MON">Mon</label>
+      <label><input type="checkbox" value="TUE">Tue</label>
+      <label><input type="checkbox" value="WED">Wed</label>
+      <label><input type="checkbox" value="THU">Thu</label>
+      <label><input type="checkbox" value="FRI">Fri</label>
+      <label><input type="checkbox" value="SAT">Sat</label>
+      <label><input type="checkbox" value="SUN">Sun</label>
+    </div>
+
+    <label>Start Date</label>
+    <input type="date" id="standing-start-date" class="trip-input" />
+
+    <label>End Date</label>
+    <input type="date" id="standing-end-date" class="trip-input" />
+  </div>
+
 
   <label>Vehicle</label>
   <input list="vehicle-options" id="trip-vehicle" class="trip-input" placeholder="Enter or select vehicle">
