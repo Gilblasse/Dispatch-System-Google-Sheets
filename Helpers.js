@@ -94,8 +94,11 @@ function toTimeOnlySmart(val) {
 }
 
 function formatDateString(date) {
-  if (typeof date === 'string') return date;
-  return Utilities.formatDate(new Date(date), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  const parsed = new Date(date);
+  if (isNaN(parsed)) {
+    return typeof date === 'string' ? date : '';
+  }
+  return Utilities.formatDate(parsed, Session.getScriptTimeZone(), 'yyyy-MM-dd');
 }
 
 function uiCellFormat(date){
