@@ -152,6 +152,26 @@
   const pickupInput = document.getElementById("trip-pickup");
   const dropoffInput = document.getElementById("trip-dropoff");
   const mapsLink = document.getElementById("maps-directions-link");
+  const standingStartInput = document.getElementById("standing-start-date");
+  const standingEndInput = document.getElementById("standing-end-date");
+
+  function updateStandingEndMax() {
+    if (!standingStartInput || !standingEndInput) return;
+    standingEndInput.min = standingStartInput.value;
+    if (typeof parseLocalDate === "function") {
+      const start = parseLocalDate(standingStartInput.value);
+      if (!isNaN(start)) {
+        const max = new Date(start.getTime() + 183 * 86400000);
+        standingEndInput.max = max.toISOString().slice(0, 10);
+        if (
+          standingEndInput.value &&
+          standingEndInput.value < standingStartInput.value
+        ) {
+          standingEndInput.value = standingStartInput.value;
+        }
+      }
+    }
+  }
 
   function updateMapsLink() {
     const pu = pickupInput.value.trim();
@@ -168,5 +188,9 @@
 
   pickupInput.addEventListener("input", updateMapsLink);
   dropoffInput.addEventListener("input", updateMapsLink);
+  if (standingStartInput) {
+    document.addEventListener("DOMContentLoaded", updateStandingEndMax);
+    standingStartInput.addEventListener("change", updateStandingEndMax);
+  }
   //]]>
 </script>

@@ -204,6 +204,18 @@
             days: Array.from(document.querySelectorAll("#custom-days input:checked"))
               .map(cb => cb.value)
           };
+          const start = parseLocalDate(trip.standing.startDate);
+          const end = parseLocalDate(trip.standing.endDate);
+          if (end < start) {
+            alert("🚫 Standing order end date cannot be before start date.");
+            overlay.style.display = "none";
+            return;
+          }
+          if ((end - start) / 86400000 > 183) {
+            alert("🚫 Standing order cannot exceed 183 days.");
+            overlay.style.display = "none";
+            return;
+          }
         }
 
         const isReturnTrip = document.getElementById("return-trip-checkbox")?.checked;
