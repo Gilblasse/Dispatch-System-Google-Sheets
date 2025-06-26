@@ -93,13 +93,6 @@ function toTimeOnlySmart(val) {
   return new Date(1899, 11, 30, d.getHours(), d.getMinutes());
 }
 
-function formatDateString(date) {
-  const parsed = new Date(date);
-  if (isNaN(parsed)) {
-    return typeof date === 'string' ? date : '';
-  }
-  return Utilities.formatDate(parsed, Session.getScriptTimeZone(), 'yyyy-MM-dd');
-}
 
 function uiCellFormat(date){
   const d = new Date(date);
@@ -154,7 +147,7 @@ function tripObjectToRowArray(trip) {
 function convertRawData(value) {
   const rawTrips = JSON.parse(value || "[]");
   return rawTrips.map(tripRow => ({
-    date: formatDateString(tripRow[0]),           // A: Date
+    date: Utils.formatDateString(tripRow[0]),           // A: Date
     startTime: tripRow[1],      // B: Start Time
     time: tripRow[2],           // C: Time
     passenger: tripRow[3],      // D: Passenger
@@ -178,7 +171,7 @@ function convertRawData(value) {
 
 function convertRowToTrip(row) {
   return {
-    date: formatDateString(row[0]),    // A
+    date: Utils.formatDateString(row[0]),    // A
     time: row[2],                      // C
     passenger: row[3],                 // D
     transport: row[5],                 // F
