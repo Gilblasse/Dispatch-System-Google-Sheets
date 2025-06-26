@@ -316,9 +316,10 @@ class TripManager {
     const allTrips = this.getAllTrips();
     const target = JSON.stringify(standing);
     allTrips.forEach(trip => {
-      const st = JSON.stringify(trip.standing || {});
+      const obj = Array.isArray(trip) ? this.logManager.rowToTrip(trip) : trip;
+      const st = JSON.stringify(obj.standing || {});
       if (st === target) {
-        this.deleteTripFromLog(trip.id, trip.date);
+        this.deleteTripFromLog(obj.id, obj.date);
       }
     });
   }
