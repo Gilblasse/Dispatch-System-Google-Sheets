@@ -69,6 +69,10 @@ class TripManager {
   }
 
   addTripToLog(trip) {
+    if (Array.isArray(trip)) {
+      trip.forEach(t => this.addTripToLog(t));
+      return;
+    }
     const sheet = this.logSheet;
     for (const k in logIndexCache) delete logIndexCache[k];
     const allData = sheet.getRange('A2:B101').getValues();
