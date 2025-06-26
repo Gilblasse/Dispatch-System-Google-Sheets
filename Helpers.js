@@ -69,6 +69,7 @@ function fromTimeOnly(val) {
     return val;
   }
 
+  const d = new Date(val);
   const t = new Date(1899, 11, 30, d.getHours(), d.getMinutes()); // ✅ local time
   return t.toISOString(); // if string is truly needed
 }
