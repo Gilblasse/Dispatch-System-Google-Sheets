@@ -323,6 +323,21 @@ class TripManager {
       }
     });
   }
+
+  deleteStandingOrderOnDates(standing, dates) {
+    if (!standing || !Array.isArray(dates) || dates.length === 0) return;
+    const target = JSON.stringify(standing);
+    const dateSet = new Set(dates.map(d => Utils.formatDateString(d)));
+    const allTrips = this.getAllTrips();
+    allTrips.forEach(trip => {
+      const obj = Array.isArray(trip) ? this.logManager.rowToTrip(trip) : trip;
+      const st = JSON.stringify(obj.standing || {});
+      const tripDate = Utils.formatDateString(obj.date || "");
+      if (st === target && dateSet.has(tripDate)) {
+        this.deleteTripFromLog(obj.id, obj.date);
+      }
+    });
+  }
 }
 
 const tripManager = new TripManager(spreadsheetService, logManager);
@@ -334,3 +349,4 @@ function getAllTrips() { return tripManager.getAllTrips(); }
 function updateTripInLog(trip) { return tripManager.updateTripInLog(trip); }
 function deleteTripFromLog(id, date) { return tripManager.deleteTripFromLog(id, date); }
 function deleteStandingOrder(standing) { return tripManager.deleteStandingOrder(standing); }
+function deleteStandingOrderOnDates(standing, dates) { return tripManager.deleteStandingOrderOnDates(standing, dates); }
