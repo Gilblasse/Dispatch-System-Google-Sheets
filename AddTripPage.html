@@ -100,12 +100,18 @@
         }
       }
 
+      function parseLocalDate(dateStr) {
+        if (!dateStr) return new Date(NaN);
+        const [y, m, d] = dateStr.split("-").map(Number);
+        return new Date(y, m - 1, d);
+      }
+
       function expandStandingOrder(trip) {
         if (!trip.standing) return [trip];
         const { startDate, endDate, frequency, days = [] } = trip.standing;
         if (!startDate || !endDate) return [trip];
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+        const start = parseLocalDate(startDate);
+        const end = parseLocalDate(endDate);
         const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
         const results = [];
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
