@@ -74,27 +74,6 @@ function fromTimeOnly(val) {
   return t.toISOString(); // if string is truly needed
 }
 
-// 👇 New smarter version used everywhere
-function toTimeOnlySmart(val) {
-  if (!val || (typeof val === "string" && val.trim() === "")) return new Date(1899, 11, 30, 23, 58);
-
-  if (typeof val === "string") {
-    if (/^\d{4}-\d{2}-\d{2}T/.test(val)) {
-      const d = new Date(val);
-      return new Date(1899, 11, 30, d.getHours(), d.getMinutes());
-    }
-    if (/^\d{1,2}:\d{2}$/.test(val)) {
-      const [h, m] = val.split(":").map(Number);
-      return new Date(1899, 11, 30, h, m);
-    }
-  }
-
-  const d = new Date(val);
-  if (isNaN(d)) return new Date(1899, 11, 30, 23, 58);
-  return new Date(1899, 11, 30, d.getHours(), d.getMinutes());
-}
-
-
 function uiCellFormat(date){
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
@@ -113,8 +92,8 @@ function formatToYMD(dateString) {
 function tripObjectToRowArray(trip) {
   return [
     fromDateOnly(trip.date),           // A
-    toTimeOnlySmart(trip.startTime),   // B
-    toTimeOnlySmart(trip.time),        // C
+    toTimeOnlySmart(trip.startTime, { returnMillis: false }),   // B
+    toTimeOnlySmart(trip.time, { returnMillis: false }),        // C
     trip.passenger || "",              // D
     "",                                // E
     trip.transport || "",              // F
@@ -123,10 +102,10 @@ function tripObjectToRowArray(trip) {
     trip.invoice || "",                // I
     trip.pickup || "",                 // J
     "",                                // K
-    toTimeOnlySmart(trip.in),          // L
+    toTimeOnlySmart(trip.in, { returnMillis: false }),          // L
     trip.dropoff || "",                // M
     "",                                // N
-    toTimeOnlySmart(trip.out),         // O
+    toTimeOnlySmart(trip.out, { returnMillis: false }),         // O
     "",                                // P
     trip.status || "",                 // Q
     trip.vehicle || "",                // R
