@@ -325,15 +325,15 @@ class TripManager {
   }
 
   deleteStandingOrderOnDates(standing, dates) {
-    if (!standing || !Array.isArray(dates) || dates.length === 0) return;
-    const target = JSON.stringify(standing);
-    const dateSet = new Set(dates.map(d => Utils.formatDateString(d)));
+    if (!standing || !Array.isArray(dates)) return;
     const allTrips = this.getAllTrips();
+    const target = JSON.stringify(standing);
     allTrips.forEach(trip => {
       const obj = Array.isArray(trip) ? this.logManager.rowToTrip(trip) : trip;
-      const st = JSON.stringify(obj.standing || {});
-      const tripDate = Utils.formatDateString(obj.date || "");
-      if (st === target && dateSet.has(tripDate)) {
+      if (
+        JSON.stringify(obj.standing || {}) === target &&
+        dates.includes(Utils.formatDateString(obj.date))
+      ) {
         this.deleteTripFromLog(obj.id, obj.date);
       }
     });
