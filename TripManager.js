@@ -347,19 +347,6 @@ class TripManager {
       }
     });
   }
-
-  rebuildDateIndex() {
-    const sheet = this.logSheet;
-    const last = sheet.getLastRow();
-    const dates = sheet.getRange(2, 1, Math.max(last - 1, 0), 1).getValues();
-    const index = {};
-    dates.forEach((row, i) => {
-      index[Utils.formatDateString(row[0])] = i;
-    });
-    this.dateIndex = index;
-    saveDateIndex(this.dateIndex);
-    for (const k in logIndexCache) delete logIndexCache[k];
-  }
 }
 
 const tripManager = new TripManager(spreadsheetService, logManager);
@@ -372,4 +359,3 @@ function updateTripInLog(trip) { return tripManager.updateTripInLog(trip); }
 function deleteTripFromLog(id, date) { return tripManager.deleteTripFromLog(id, date); }
 function deleteStandingOrder(standing) { return tripManager.deleteStandingOrder(standing); }
 function deleteStandingOrderOnDates(standing, dates) { return tripManager.deleteStandingOrderOnDates(standing, dates); }
-function rebuildLogDateIndex() { return tripManager.rebuildDateIndex(); }
