@@ -17,7 +17,7 @@ function GOOGLEMAPS(start_address,end_address,return_type) {
   var getTheLeg = directions["routes"][0]["legs"][0];
   
   var meters = getTheLeg["distance"]["value"];
-  var todaysTime = Utilities.formatDate(new Date(), 'EST', "HH:mm:ss");
+  var todaysTime = Utilities.formatDate(new Date(), 'America/New_York', "HH:mm:ss");
 
   
   switch(return_type){ 
@@ -76,7 +76,7 @@ function mapIt() { // UpDATE LOOP TO 100
   
   var ss = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DISPATCH");
   var mark = '"';
-  var today = Utilities.formatDate(new Date(), 'EST', "MM-dd-yyyy").slice(3,5);
+  var today = Utilities.formatDate(new Date(), 'America/New_York', "MM-dd-yyyy").slice(3,5);
   
   PropertiesService.getScriptProperties().setProperty('mapItCount', count);
   

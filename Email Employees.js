@@ -57,7 +57,7 @@ function driversData(name,email,selectedDate,isEmail) {
       car = row[17]
       status = row[4] 
       address = "1) From: "+row[9]+' &nbsp;&nbsp;||&nbsp;&nbsp; To: '+row[12];
-      var colStartTime = Utilities.formatDate(new Date(row[1]), 'EST', "HH:MM:SS");
+      var colStartTime = Utilities.formatDate(new Date(row[1]), 'America/New_York', "HH:MM:SS");
 
        if((driver === name) && (instance === 0) && (startDate === tomorrowsDate) && (status !== "CANCEL")){
          
