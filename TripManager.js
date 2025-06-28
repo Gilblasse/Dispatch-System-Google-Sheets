@@ -96,7 +96,7 @@ class TripManager {
       rowIndex = allData.findIndex(row => {
         const rowDate = row[0];
         if (!rowDate) return false;
-        const formatted = Utils.formatDateString(rowDate);
+        const formatted = Utilities.formatDate(new Date(rowDate), Session.getScriptTimeZone(), 'yyyy-MM-dd');
         return formatted === normalizedDate;
       });
       if (rowIndex !== -1) {
@@ -203,7 +203,7 @@ class TripManager {
         if (trips.some(t => t[23] === trip.id)) {
           sourceRowIndex = i;
           sourceTrips = trips;
-          sourceDateKey = rowDate ? Utils.formatDateString(rowDate) : '';
+          sourceDateKey = rowDate ? Utilities.formatDate(new Date(rowDate), Session.getScriptTimeZone(), 'yyyy-MM-dd') : '';
           break;
         }
       } catch (e) {
@@ -225,7 +225,7 @@ class TripManager {
       let targetRowIndex = allData.findIndex(row => {
         const rowDate = row[0];
         if (!rowDate) return false;
-        const formatted = Utils.formatDateString(rowDate);
+        const formatted = Utilities.formatDate(new Date(rowDate), Session.getScriptTimeZone(), 'yyyy-MM-dd');
         return formatted === normalizedDate;
       });
       if (targetRowIndex !== -1) {
@@ -275,7 +275,7 @@ class TripManager {
     let trips = [];
     for (let i = 0; i < allData.length; i++) {
       const rowDate = allData[i][0];
-      const formattedDate = rowDate ? Utils.formatDateString(rowDate) : '';
+      const formattedDate = rowDate ? Utilities.formatDate(new Date(rowDate), Session.getScriptTimeZone(), 'yyyy-MM-dd') : '';
       if (formattedDate === targetDate) {
         rowIndex = i;
         break;
