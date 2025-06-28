@@ -158,8 +158,8 @@
   function updateStandingEndMax() {
     if (!standingStartInput || !standingEndInput) return;
     standingEndInput.min = standingStartInput.value;
-    if (typeof Utils !== 'undefined') {
-      const start = Utils.parseLocalDate(standingStartInput.value);
+    if (typeof parseLocalDate === "function") {
+      const start = parseLocalDate(standingStartInput.value);
       if (!isNaN(start)) {
         const max = new Date(start.getTime() + 183 * 86400000);
         standingEndInput.max = max.toISOString().slice(0, 10);
