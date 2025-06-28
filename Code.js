@@ -35,7 +35,6 @@ function onOpen() {
   menu.addToUi();
 }
 
-const TZ = Session.getScriptTimeZone();
 const driversDataLinkedRangeHeight = 230
 
 
