@@ -87,7 +87,7 @@ function snapshotDispatchToLog(isAlert = false) {
     const dateVal = row[0];
     const key = dateVal === '' || dateVal == null
       ? ''
-      : Utilities.formatDate(new Date(dateVal), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+      : Utils.formatDateString(dateVal);
 
     if (key === '' && blankRow === null) blankRow = i + 2;
 
@@ -182,7 +182,7 @@ function restoreDispatchFromLog(date) {
   const rowIndex = logData.findIndex(row => {
     const rowDate = row[0];
     if (!rowDate) return false;
-    const formatted = Utilities.formatDate(new Date(rowDate), Session.getScriptTimeZone(), "yyyy-MM-dd");
+    const formatted = Utils.formatDateString(rowDate);
     return formatted === targetDate;
   });
 
