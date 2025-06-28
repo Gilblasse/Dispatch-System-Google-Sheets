@@ -62,17 +62,6 @@ function fromDateOnly(val) {
   return d // return Utilities.formatDate(d, Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss'Z'");
 }
 
-function fromTimeOnly(val) {
-  if (!val || isNaN(new Date(val))) return "";
-
-  if (typeof val === "string" && /^\d{4}-\d{2}-\d{2}T/.test(val)) {
-    return val;
-  }
-
-  const d = new Date(val);
-  const t = new Date(1899, 11, 30, d.getHours(), d.getMinutes()); // ✅ local time
-  return t.toISOString(); // if string is truly needed
-}
 
 function uiCellFormat(date){
   const d = new Date(date);

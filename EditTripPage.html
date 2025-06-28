@@ -32,6 +32,7 @@
     </div>
 
     <?!= include('SharedLoaders') ?>
+    <?!= include('Utils') ?>
 
     <script>
       const rawTripId = <?= JSON.stringify(tripId) ?>.replace(/^"+|"+$/g, '');
@@ -55,7 +56,7 @@
 
         const parsedTrip = { id: rawTripId, date: rawTripDate };
         const safeId = encodeURIComponent(parsedTrip.id);
-        const safeDate = rawTripDate ? formatDateString(new Date(rawTripDate)) : "";
+        const safeDate = rawTripDate ? Utils.formatDateString(new Date(rawTripDate)) : "";
 
         document.getElementById("loading-overlay").style.display = "flex";
         google.script.run
@@ -90,30 +91,10 @@
       }
 
 
-      function formatDateString(date) {
-        return new Date(date).toISOString().slice(0, 10);
-      }
-
       function stripQuotes(str) {
         return typeof str === 'string' ? str.replace(/^"+|"+$/g, '').trim() : str;
       }
 
-      function formatTime(dateStr) {
-        return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      }
-
-      function convertISOStringToTimeInput(isoString) {
-        const date = new Date(isoString);
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        return `${hours}:${minutes}`;
-      }
-
-      function parseLocalDate(dateStr) {
-        if (!dateStr) return new Date(NaN);
-        const [y, m, d] = dateStr.split("-").map(Number);
-        return new Date(y, m - 1, d);
-      }
 
       function goBack() {
         const date = document.getElementById("trip-date").value
@@ -127,8 +108,8 @@
 
       function populateTripForm(trip) {
         currentTrip = trip;
-        const time = convertISOStringToTimeInput(trip.time);
-        const tripDate = trip.date ? (formatDateString(trip.date) || '') : '';
+        const time = Utils.timeToString(trip.time);
+        const tripDate = trip.date ? (Utils.formatDateString(trip.date) || '') : '';
         
         toggleSaveButtonVisibility(tripDate);
         document.getElementById("loading-overlay").style.display = "none";

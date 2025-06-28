@@ -144,11 +144,6 @@
     });
   }
 
-  function parseLocalDate(dateStr) {
-    if (!dateStr) return new Date(NaN);
-    const [y, m, d] = dateStr.split("-").map(Number);
-    return new Date(y, m - 1, d);
-  }
 
   function expandStandingOrder(trip) {
     if (!trip || !trip.standing) return trip && trip.date ? [trip.date] : [];
@@ -156,8 +151,8 @@
     const { startDate, endDate, frequency, days = [] } = trip.standing;
     if (!startDate || !endDate) return trip.date ? [trip.date] : [];
 
-    const start = parseLocalDate(startDate);
-    const end = parseLocalDate(endDate);
+    const start = Utils.parseLocalDate(startDate);
+    const end = Utils.parseLocalDate(endDate);
     const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
     const results = [];
 
