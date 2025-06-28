@@ -8,8 +8,8 @@ function arrivedPuDo(){  // RANGE NEEDS TO BE 100
   var ss = SpreadsheetApp.openById("1oc_ac8XTmjcoUjy0l_vj6m5j4YYVFuRykybSHToDAME").getSheetByName("DISPATCH");
   var activeCell = ss.getRange("A1:AC100");
   var values = activeCell.getValues();
-  var todaysTime = Utilities.formatDate(new Date(), 'America/New_York', "HH:mm:ss");
-  var todaysDate = Utilities.formatDate(new Date(), 'America/New_York', "MM-dd-yyyy");
+  var todaysTime = Utilities.formatDate(new Date(), 'EST', "HH:mm:ss");
+  var todaysDate = Utilities.formatDate(new Date(), 'EST', "MM-dd-yyyy");
   
   
   for(var r=1; r<=98; r++){                                                                          // RANGE TO 98

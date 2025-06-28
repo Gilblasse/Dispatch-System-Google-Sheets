@@ -206,12 +206,12 @@ var datarange = sheet.getDataRange();
 var lastrow = sheet.getRange("AC1").getValue(); 
 var values = datarange.getValues();// get all data in a 2D array
 var subRow = lastrow-50;
-var currentDate = Utilities.formatDate(new Date(), 'America/New_York', "MM-dd-yyyy");//today
+var currentDate = Utilities.formatDate(new Date(), 'EST', "MM-dd-yyyy");//today
 var count=0;
  
   for (i=lastrow;i>=subRow;i--) {
     var statusArray = values[i-1][16];//values[i-1][0]
-    var tempDate = Utilities.formatDate(new Date(), 'America/New_York', "MM-dd-yyyy");// arrays are 0 indexed so row1 = values[0] and col3 = [2]
+    var tempDate = Utilities.formatDate(new Date(), 'EST', "MM-dd-yyyy");// arrays are 0 indexed so row1 = values[0] and col3 = [2]
 
     if(tempDate >= currentDate){
       if((statusArray == 'IN TRANSIT')||(statusArray == '')||(statusArray == 'IN ROUTE')||(statusArray == 'PICK UP LOCATION')||(statusArray == 'DROP OFF LOCATION')||(statusArray == 'WAITING')){

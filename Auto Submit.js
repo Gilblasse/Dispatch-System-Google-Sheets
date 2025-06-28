@@ -7,14 +7,14 @@ ScriptApp.newTrigger("autoSubmit")
   .atHour(exeHour)
   .nearMinute(exeMin)
   .everyDays(1)
-  .inTimezone("America/New_York")
+  .inTimezone("EST")
   .create();
 }
 
 
 // ******* AUTO SUBMIT BUTTON *******
 function autoSubmit(){
-  var currentTime = Utilities.formatDate(new Date(), 'America/New_York', "HH:mm:ss");
+  var currentTime = Utilities.formatDate(new Date(), 'EST', "HH:mm:ss");
   Logger.log(currentTime);
     transfer();
      sortClients();
