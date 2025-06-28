@@ -1,8 +1,6 @@
 const driversSheetID = '13rpPjV3KOxfQw9W6ARA-KWSkxNI7qy6oqp4fwvlchlA'
 const dispatchSheetID = '1oc_ac8XTmjcoUjy0l_vj6m5j4YYVFuRykybSHToDAME'
 const prodUrl = "https://us-central1-agmtlambdaapi.cloudfunctions.net/trips"
-const devUrl = "http://localhost:5001/agmtlambdaapi/us-central1/trips"
-
 
 const dispatchSheetFormulas = {
   "L2:L100": `=IFERROR(INDEX('drivers data linked'!$A$2:$O$${driversDataLinkedRangeHeight},MATCH(X2,'drivers data linked'!$O$2:$O$${driversDataLinkedRangeHeight},0),MATCH($L$1,'drivers data linked'!$A$1:$O$1,0)),"")`,
