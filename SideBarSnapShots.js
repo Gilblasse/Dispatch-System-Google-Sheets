@@ -263,24 +263,6 @@ function addToMapArrayIfUnique(map, key, value) {
   }
 }
 
-function cleanFirstName(rawFirstName) {
-  return String(rawFirstName || "")
-    .replace(/\(.*?\)/g, "")
-    .replace(/\[.*?\]/g, "")
-    .replace(/[^a-zA-Z\s'-]/g, "")
-    .trim();
-}
-
-function addToMapArrayIfUnique(map, key, value) {
-  const strVal = String(value || "").trim();
-  if (!strVal) return;
-
-  if (!map[key]) {
-    map[key] = [strVal];
-  } else if (!map[key].includes(strVal)) {
-    map[key].push(strVal);
-  }
-}
 
 function migrateAddPassengersToModularCache() {
   const sourceSS = SpreadsheetApp.openById("1oc_ac8XTmjcoUjy0l_vj6m5j4YYVFuRykybSHToDAME");
