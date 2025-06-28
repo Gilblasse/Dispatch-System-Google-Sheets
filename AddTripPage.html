@@ -19,6 +19,7 @@
     </div>
 
     <?!= include('SharedLoaders') ?>
+    <?!= include('Utils') ?>
 
     <script>
       const initialDate = <?= JSON.stringify(initialDate) ?>;
@@ -100,12 +101,6 @@
         }
       }
 
-      function parseLocalDate(dateStr) {
-        if (!dateStr) return new Date(NaN);
-        const [y, m, d] = dateStr.split("-").map(Number);
-        return new Date(y, m - 1, d);
-      }
-
 
       function submitNewTrip() {
         document.getElementById("loading-overlay").style.display = "flex";
@@ -157,8 +152,8 @@
             days: Array.from(document.querySelectorAll("#custom-days input:checked"))
               .map(cb => cb.value)
           };
-          const start = parseLocalDate(trip.standing.startDate);
-          const end = parseLocalDate(trip.standing.endDate);
+          const start = Utils.parseLocalDate(trip.standing.startDate);
+          const end = Utils.parseLocalDate(trip.standing.endDate);
           if (end < start) {
             alert("🚫 Standing order end date cannot be before start date.");
             overlay.style.display = "none";
