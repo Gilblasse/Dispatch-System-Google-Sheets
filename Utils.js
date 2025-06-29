@@ -27,27 +27,21 @@ class Utils {
 const utils = Utils;
 
 /**
- * Custom sheet function used in column K. Generates a TripIDKEY for the
- * current row based on key fields. Usage in Sheets: =TRIP_ID(D2)
- * @param {string} passenger Passenger name from column D
- * @return {string}
+ * Custom formula to generate a UUID once when passenger name is present.
+ * Will only generate if input is non-empty and not already a UUID.
+ *
+ * @param {string} name - Passenger name (usually from column D)
+ * @return {string} UUID or empty string
+ *
+ * Usage: =TRIP_ID(D2)
  */
-function TRIP_ID(passenger) {
-  try {
-    const sheet = SpreadsheetApp.getActiveSheet();
-    const row = SpreadsheetApp.getActiveRange().getRow();
-    const rowData = sheet.getRange(row, 1, 1, sheet.getLastColumn()).getValues()[0];
-    const fields = {
-      date: rowData[0],
-      time: rowData[2],
-      passenger: passenger,
-      phone: rowData[6],
-      pickup: rowData[9],
-      dropoff: rowData[12]
-    };
-    return Utils.generateTripId(fields);
-  } catch (e) {
-    Logger.log('TRIP_ID error: ' + e.message);
-    return '';
-  }
+function TRIP_ID(name) {
+  if (!name || typeof name !== 'string' || name.trim() === '') return '';
+
+  // If it's already a UUID (assumes valid UUID format), return it unchanged
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (uuidPattern.test(name.trim())) return name.trim();
+
+  // Otherwise, generate a new UUID
+  return Utilities.getUuid();
 }
