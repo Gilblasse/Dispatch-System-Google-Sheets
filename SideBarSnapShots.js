@@ -93,9 +93,9 @@ function snapshotDispatchToLog(isAlert = false) {
 
     dateToRow[key] = i + 2;
     try {
-      logDataByDate[key] = JSON.parse(row[1] || '[]');
+      logDataByDate[key] = JSON.parse(row[1] || '{}');
     } catch (e) {
-      logDataByDate[key] = [];
+      logDataByDate[key] = {};
     }
   });
 
@@ -130,16 +130,16 @@ function snapshotDispatchToLog(isAlert = false) {
 
   // Merge and write
   for (const [dateKey, dispatchTrips] of Object.entries(groupedByDate)) {
-    const logTrips = logDataByDate[dateKey] || [];
-    const mergedMap = Object.fromEntries(logTrips.map(t => [t[23], t]));
+    const logTrips = logDataByDate[dateKey] || {};
+    const mergedMap = { ...logTrips };
 
-    for (const trip of dispatchTrips) {
-      const id = trip[23];
-      if (id) mergedMap[id] = trip;
+    for (const row of dispatchTrips) {
+      const obj = dispatchRowToTripObject(row);
+      if (obj.id) mergedMap[obj.id] = obj;
     }
 
-    const mergedTrips = sortTripsByTime(Object.values(mergedMap));
-    const json = JSON.stringify(mergedTrips);
+    const ordered = sortTripMapByTime(mergedMap);
+    const json = JSON.stringify(ordered);
     let row = dateToRow[dateKey];
 
     if (dateKey === '') {
@@ -200,6 +200,9 @@ function restoreDispatchFromLog(date) {
   let parsed;
   try {
     parsed = JSON.parse(json);
+    if (!Array.isArray(parsed)) {
+      parsed = Object.values(parsed).map(t => Array.isArray(t) ? t : tripObjectToRowArray(t));
+    }
   } catch (e) {
     SpreadsheetApp.getUi().alert(`❌ Error parsing snapshot JSON for ${targetDate}`);
     return;

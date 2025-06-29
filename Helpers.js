@@ -17,6 +17,64 @@ function sortTripsByTime(trips) {
   });
 }
 
+function sortTripObjectsByTime(trips) {
+  return trips.slice().sort((a, b) => {
+    const timeA = toTimeOnlySmart(a.time || a.startTime);
+    const timeB = toTimeOnlySmart(b.time || b.startTime);
+    return timeA - timeB;
+  });
+}
+
+function sortTripMapByTime(map) {
+  const sorted = sortTripObjectsByTime(Object.values(map));
+  return Object.fromEntries(sorted.map(t => [t.id, t]));
+}
+
+/**
+ * Serializes a Map of trips to a JSON string. Trips are first ordered by time
+ * for consistency, then converted to an array of [id, trip] pairs.
+ * @param {Map<string, Object>} map
+ * @return {string}
+ */
+function serializeTripMap(map) {
+  if (!(map instanceof Map)) return JSON.stringify([]);
+  const ordered = sortTripObjectsByTime(Array.from(map.values()));
+  const pairs = ordered.map(trip => [trip.id, trip]);
+  return JSON.stringify(pairs);
+}
+
+/**
+ * Deserializes a JSON string created by {@link serializeTripMap} back into a
+ * Map keyed by trip ID. Falls back gracefully on legacy object/array formats.
+ * @param {string} str
+ * @return {Map<string, Object>}
+ */
+function deserializeTripMap(str) {
+  const map = new Map();
+  if (!str) return map;
+
+  let parsed;
+  try {
+    parsed = JSON.parse(str);
+  } catch (e) {
+    return map;
+  }
+
+  if (Array.isArray(parsed)) {
+    parsed.forEach(item => {
+      if (Array.isArray(item) && item.length === 2) {
+        map.set(String(item[0]), item[1]);
+      }
+    });
+  } else if (parsed && typeof parsed === 'object') {
+    Object.keys(parsed).forEach(k => {
+      map.set(String(k), parsed[k]);
+    });
+  }
+
+  return map;
+}
+
 function toTimeOnlySmart(val, { returnMillis = true } = {}) {
   // Handle blank values
   if (!val || (typeof val === "string" && val.trim() === "")) {
@@ -125,28 +183,46 @@ function tripObjectToRowArray(trip) {
 
 
 function convertRawData(value) {
-  const rawTrips = JSON.parse(value || "[]");
-  return rawTrips.map(tripRow => ({
-    date: Utils.formatDateString(tripRow[0]),           // A: Date
-    startTime: tripRow[1],      // B: Start Time
-    time: tripRow[2],           // C: Time
-    passenger: tripRow[3],      // D: Passenger
-    dispatchStatus: tripRow[4], // E: Status
-    transport: tripRow[5],      // F: Transport
-    phone: tripRow[6],          // G: Phone
-    medicaid: tripRow[7],       // H: Medicaid #
-    invoice: tripRow[8],        // I: Invoice #
-    pickup: tripRow[9],         // J: Pick Up
-    dropoff: tripRow[12],       // M: Drop Off
-    status: tripRow[16],        // Q: Status
-    vehicle: tripRow[17],       // R: Vehicle
-    driver: tripRow[20],        // U: DRIVER
-    id: tripRow[23],            // X: UUID
-    notes: tripRow[24],         // Y: Notes
-    returnOf: tripRow[30] || "", // AE: returnOf
-    previousId: tripRow[31] || "", // AF
-    standing: (() => { try { return JSON.parse(tripRow[32] || '{}'); } catch (e) { return {}; } })()
-  }));
+  let parsed;
+  try {
+    parsed = JSON.parse(value || "{}");
+  } catch (e) {
+    return [];
+  }
+
+  let items = [];
+  if (Array.isArray(parsed)) {
+    items = parsed;
+  } else if (parsed && typeof parsed === "object") {
+    items = Object.values(parsed);
+  }
+
+  return items.map(tripRow => {
+    if (Array.isArray(tripRow)) {
+      return {
+        date: Utils.formatDateString(tripRow[0]),
+        startTime: tripRow[1],
+        time: tripRow[2],
+        passenger: tripRow[3],
+        dispatchStatus: tripRow[4],
+        transport: tripRow[5],
+        phone: tripRow[6],
+        medicaid: tripRow[7],
+        invoice: tripRow[8],
+        pickup: tripRow[9],
+        dropoff: tripRow[12],
+        status: tripRow[16],
+        vehicle: tripRow[17],
+        driver: tripRow[20],
+        id: tripRow[23],
+        notes: tripRow[24],
+        returnOf: tripRow[30] || "",
+        previousId: tripRow[31] || "",
+        standing: (() => { try { return JSON.parse(tripRow[32] || '{}'); } catch (e) { return {}; } })()
+      };
+    }
+    return tripRow;
+  });
 }
 
 function convertRowToTrip(row) {

@@ -68,14 +68,14 @@ class TripManager {
     }
     const normalizedDate = Utils.formatDateString(trip.date || '');
     let rowIndex = -1;
-    let trips = [];
+    let trips = {};
     if (normalizedDate === '') {
       rowIndex = 0;
       try {
-        trips = JSON.parse(allData[0]?.[1] || '[]');
+        trips = JSON.parse(allData[0]?.[1] || '{}');
       } catch (e) {
         Logger.log('⚠️ Could not parse JSON in B2.');
-        trips = [];
+        trips = {};
       }
     } else {
       rowIndex = allData.findIndex(row => {
@@ -86,24 +86,19 @@ class TripManager {
       });
       if (rowIndex !== -1) {
         try {
-          trips = JSON.parse(allData[rowIndex][1] || '[]');
+          trips = JSON.parse(allData[rowIndex][1] || '{}');
         } catch (e) {
           Logger.log('⚠️ Could not parse JSON in row ' + (rowIndex + 2));
-          trips = [];
+          trips = {};
         }
       } else {
-        sheet.appendRow([normalizedDate, '[]']);
+        sheet.appendRow([normalizedDate, '{}']);
         rowIndex = sheet.getLastRow() - 2;
       }
     }
-    const newRow = this.logManager.tripToRow(trip);
-    if (trip.standing) {
-      newRow[32] = JSON.stringify(trip.standing);
-    }
-    trips = trips.filter(t => t[23] !== trip.id);
-    trips.push(newRow);
-    const sorted = sortTripsByTime(trips);
-    sheet.getRange(rowIndex + 2, jsonCol).setValue(JSON.stringify(sorted));
+    trips[trip.id] = trip;
+    const ordered = sortTripMapByTime(trips);
+    sheet.getRange(rowIndex + 2, jsonCol).setValue(JSON.stringify(ordered));
 
     // update cache for this date
     logIndexCache[normalizedDate] = rowIndex;
@@ -147,7 +142,7 @@ class TripManager {
     const all = [];
     data.forEach(row => {
       try {
-        const trips = JSON.parse(row[1] || '[]');
+        const trips = this.logManager.jsonToTrips(row[1]);
         all.push(...trips);
       } catch (e) {
         Logger.log('⚠️ Error reading JSON from row.');
@@ -166,16 +161,15 @@ class TripManager {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const newDate = trip.date ? new Date(...normalizedDate.split('-').map((v, i) => i === 1 ? Number(v) - 1 : Number(v))) : new Date(today);
-    const updatedRow = this.logManager.tripToRow(trip);
     let sourceRowIndex = -1;
-    let sourceTrips = [];
+    let sourceTrips = {};
     let sourceDateKey = null;
     for (let i = 0; i < allData.length; i++) {
       const rowDate = allData[i][0];
       const cellValue = allData[i][1];
       try {
-        const trips = JSON.parse(cellValue || '[]');
-        if (trips.some(t => t[23] === trip.id)) {
+        const trips = JSON.parse(cellValue || '{}');
+        if (trips.hasOwnProperty(trip.id)) {
           sourceRowIndex = i;
           sourceTrips = trips;
           sourceDateKey = rowDate ? Utilities.formatDate(new Date(rowDate), Session.getScriptTimeZone(), 'yyyy-MM-dd') : '';
@@ -190,13 +184,14 @@ class TripManager {
     const isUndated = normalizedDate === '';
     const isFutureOrToday = newDate >= today;
     if (isSameDate) {
-      const updatedTrips = sortTripsByTime(sourceTrips.map(t => (t[23] === trip.id ? updatedRow : t)));
-      sheet.getRange(sourceRowIndex + 2, jsonCol).setValue(JSON.stringify(updatedTrips));
+      sourceTrips[trip.id] = trip;
+      const ordered = sortTripMapByTime(sourceTrips);
+      sheet.getRange(sourceRowIndex + 2, jsonCol).setValue(JSON.stringify(ordered));
       return;
     }
     if (!isUndated && isFutureOrToday) {
-      const filtered = sourceTrips.filter(t => t[23] !== trip.id);
-      sheet.getRange(sourceRowIndex + 2, jsonCol).setValue(JSON.stringify(filtered));
+      delete sourceTrips[trip.id];
+      sheet.getRange(sourceRowIndex + 2, jsonCol).setValue(JSON.stringify(sortTripMapByTime(sourceTrips)));
       let targetRowIndex = allData.findIndex(row => {
         const rowDate = row[0];
         if (!rowDate) return false;
@@ -204,32 +199,30 @@ class TripManager {
         return formatted === normalizedDate;
       });
       if (targetRowIndex !== -1) {
-        let targetTrips = [];
+        let targetTrips = {};
         try {
-          targetTrips = JSON.parse(allData[targetRowIndex][1] || '[]');
+          targetTrips = JSON.parse(allData[targetRowIndex][1] || '{}');
         } catch (e) {
           Logger.log('⚠️ Could not parse JSON at target row ' + (targetRowIndex + 2));
         }
-        targetTrips.push(updatedRow);
-        const sorted = sortTripsByTime(targetTrips);
-        sheet.getRange(targetRowIndex + 2, jsonCol).setValue(JSON.stringify(sorted));
+        targetTrips[trip.id] = trip;
+        sheet.getRange(targetRowIndex + 2, jsonCol).setValue(JSON.stringify(sortTripMapByTime(targetTrips)));
       } else {
-        sheet.appendRow([normalizedDate, JSON.stringify([updatedRow])]);
+        sheet.appendRow([normalizedDate, JSON.stringify({ [trip.id]: trip })]);
       }
       return;
     }
     if (isUndated) {
-      let undatedTrips = [];
+      let undatedTrips = {};
       try {
-        undatedTrips = JSON.parse(sheet.getRange(2, jsonCol).getValue() || '[]');
+        undatedTrips = JSON.parse(sheet.getRange(2, jsonCol).getValue() || '{}');
       } catch (e) {
         Logger.log('⚠️ Could not parse undated trip JSON at B2');
       }
-      const filtered = sourceTrips.filter(t => t[23] !== trip.id);
-      sheet.getRange(sourceRowIndex + 2, jsonCol).setValue(JSON.stringify(filtered));
-      undatedTrips.push(updatedRow);
-      const sorted = sortTripsByTime(undatedTrips);
-      sheet.getRange(2, jsonCol).setValue(JSON.stringify(sorted));
+      delete sourceTrips[trip.id];
+      sheet.getRange(sourceRowIndex + 2, jsonCol).setValue(JSON.stringify(sortTripMapByTime(sourceTrips)));
+      undatedTrips[trip.id] = trip;
+      sheet.getRange(2, jsonCol).setValue(JSON.stringify(sortTripMapByTime(undatedTrips)));
     }
   }
 
@@ -242,7 +235,7 @@ class TripManager {
     const isUndated = !date || String(date).trim() === '';
     const targetDate = isUndated ? '' : Utils.formatDateString(date);
     let rowIndex = -1;
-    let trips = [];
+    let trips = {};
     for (let i = 0; i < allData.length; i++) {
       const rowDate = allData[i][0];
       const formattedDate = rowDate ? Utilities.formatDate(new Date(rowDate), Session.getScriptTimeZone(), 'yyyy-MM-dd') : '';
@@ -254,29 +247,22 @@ class TripManager {
     if (rowIndex === -1) return;
     const range = sheet.getRange(rowIndex + 2, jsonCol);
     try {
-      trips = JSON.parse(range.getValue() || '[]');
+      trips = JSON.parse(range.getValue() || '{}');
     } catch (e) {
       Logger.log('⚠️ Could not parse existing JSON in row ' + (rowIndex + 2));
       return;
     }
-    let tripToDelete = null;
-    trips = trips.filter(trip => {
-      const tripId = Array.isArray(trip) ? trip[23] : trip.id;
-      if (tripId === id) {
-        tripToDelete = trip;
-        return false;
+    const tripToDelete = trips[id];
+    delete trips[id];
+    if (tripToDelete) {
+      const originalId = tripToDelete.id;
+      for (const [tid, t] of Object.entries(trips)) {
+        if ((t.returnOf || '') === originalId) {
+          delete trips[tid];
+        }
       }
-      return true;
-    });
-    if (tripToDelete && Array.isArray(tripToDelete)) {
-      const originalId = tripToDelete[23];
-      trips = trips.filter(trip => {
-        const returnOf = trip[30] || '';
-        return returnOf !== originalId;
-      });
     }
-    const sorted = sortTripsByTime(trips);
-    range.setValue(JSON.stringify(sorted));
+    range.setValue(JSON.stringify(sortTripMapByTime(trips)));
   }
 
   deleteStandingOrder(standing) {
