@@ -363,56 +363,41 @@ function maybeSnapshotDispatchToLog() {
 function backSyncLegacyTripIds() {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const dispatchSheet = ss.getSheetByName('DISPATCH');
     const logSheet = ss.getSheetByName('LOG');
 
-    const dispatchData = dispatchSheet.getRange('A2:Y100').getValues();
-    const logRange = logSheet.getRange('A2:B101').getValues();
+    const logRange = logSheet.getRange('A2:B' + logSheet.getLastRow()).getValues();
 
-    const dateToRow = {};
-    const logMaps = {};
-    logRange.forEach((row, i) => {
-      const dateVal = row[0];
-      const key = dateVal ? Utilities.formatDate(new Date(dateVal), Session.getScriptTimeZone(), 'yyyy-MM-dd') : '';
-      dateToRow[key] = i + 2;
+    logRange.forEach((row, idx) => {
+      const json = row[1];
+      if (!json) return;
+
+      let map;
       try {
-        logMaps[key] = deserializeTripMap(row[1]);
+        map = deserializeTripMap(json);
       } catch (e) {
-        logMaps[key] = new Map();
+        map = new Map();
       }
-    });
 
-    dispatchData.forEach((row, idx) => {
-      const passenger = row[3];
-      if (!passenger) return;
-      const dateKey = row[0] ? Utilities.formatDate(new Date(row[0]), Session.getScriptTimeZone(), 'yyyy-MM-dd') : '';
-      let tripKeyID = row[10];
-      if (!tripKeyID) {
-        tripKeyID = Utils.generateTripId({
-          date: row[0],
-          time: row[2],
-          passenger,
-          phone: row[6],
-          pickup: row[9],
-          dropoff: row[12]
-        });
-        dispatchSheet.getRange(idx + 2, 11).setValue(tripKeyID);
-      }
-      const arr = row.slice();
-      arr[10] = tripKeyID;
-      if (!logMaps[dateKey]) logMaps[dateKey] = new Map();
-      logMaps[dateKey].set(tripKeyID, arr);
-    });
+      const updatedMap = new Map();
+      map.forEach((val, key) => {
+        const arr = Array.isArray(val) ? val.slice() : tripObjectToRowArray(val);
+        let tripKeyID = key || arr[10];
+        if (!tripKeyID) {
+          tripKeyID = Utils.generateTripId({
+            date: arr[0],
+            time: arr[2],
+            passenger: arr[3],
+            phone: arr[6],
+            pickup: arr[9],
+            dropoff: arr[12]
+          });
+        }
+        arr[10] = tripKeyID;
+        updatedMap.set(tripKeyID, arr);
+      });
 
-    Object.entries(logMaps).forEach(([key, map]) => {
-      const json = JSON.stringify(Array.from(map.entries()));
-      const row = dateToRow[key];
-      if (row) {
-        logSheet.getRange(row, 2).setValue(json);
-      } else {
-        const newRow = logSheet.getLastRow() + 1;
-        logSheet.getRange(newRow, 1, 1, 2).setValues([[key, json]]);
-      }
+      const newJson = JSON.stringify(Array.from(updatedMap.entries()));
+      logSheet.getRange(idx + 2, 2).setValue(newJson);
     });
   } catch (e) {
     Logger.log('❌ Back-sync error: ' + e.message);
