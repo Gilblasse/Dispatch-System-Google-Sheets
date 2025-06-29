@@ -26,22 +26,42 @@ class Utils {
 
 const utils = Utils;
 
-/**
- * Custom formula to generate a UUID once when passenger name is present.
- * Will only generate if input is non-empty and not already a UUID.
- *
- * @param {string} name - Passenger name (usually from column D)
- * @return {string} UUID or empty string
- *
- * Usage: =TRIP_ID(D2)
- */
-function TRIP_ID(name) {
-  if (!name || typeof name !== 'string' || name.trim() === '') return '';
+function TRIP_ID(e) {
+  const sheet = e.range.getSheet();
+  if (sheet.getName() !== "DISPATCH") return;
 
-  // If it's already a UUID (assumes valid UUID format), return it unchanged
-  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  if (uuidPattern.test(name.trim())) return name.trim();
+  const editedCol = e.range.getColumn();
+  const editedRow = e.range.getRow();
 
-  // Otherwise, generate a new UUID
-  return Utilities.getUuid();
+  // We only care if Column D (Passenger Name) is edited
+  if (editedCol !== 4 || editedRow < 2) return;
+
+  const name = sheet.getRange(editedRow, 4).getValue();      // Column D
+  const tripIdCell = sheet.getRange(editedRow, 11);          // Column K
+  const existingTripId = tripIdCell.getValue();
+
+  if (name && !existingTripId) {
+    const newTripId = Utilities.getUuid();
+    tripIdCell.setValue(newTripId);
+  }
+}
+
+function generateTripIDs_K2toK100() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DISPATCH");
+  const rangeStart = 2;
+  const rangeEnd = 100;
+
+  const names = sheet.getRange(rangeStart, 4, rangeEnd - 1, 1).getValues(); // Column D
+  const ids = sheet.getRange(rangeStart, 11, rangeEnd - 1, 1).getValues();  // Column K
+
+  for (let i = 0; i < names.length; i++) {
+    const name = (names[i][0] || "").toString().trim();
+    const currentId = (ids[i][0] || "").toString().trim();
+
+    if (name && !currentId) {
+      sheet.getRange(i + rangeStart, 11).setValue(Utilities.getUuid());
+    }
+  }
+
+  Logger.log("TripIDKEYs generated in K2:K100 where needed.");
 }
