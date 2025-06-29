@@ -147,6 +147,13 @@ function formatToYMD(dateString) {
   return `${yyyy}-${mm}-${dd}`;
 }
 
+/*
+ * TripIDKEY (trip.tripKeyID) is stored in column K (index 10) as a salted
+ * SHA-256 hash of date, time, passenger, phone, pickup and dropoff. Snapshot
+ * data in the LOG sheet stores trips as JSON:
+ * JSON.stringify(Array.from(map.entries())), where each entry is
+ * [TripIDKEY, tripArray].
+ */
 function tripObjectToRowArray(trip) {
   return [
     fromDateOnly(trip.date),           // A
@@ -159,7 +166,7 @@ function tripObjectToRowArray(trip) {
     trip.medicaid || "",               // H
     trip.invoice || "",                // I
     trip.pickup || "",                 // J
-    "",                                // K
+    trip.tripKeyID || "",              // K TripIDKEY
     toTimeOnlySmart(trip.in, { returnMillis: false }),          // L
     trip.dropoff || "",                // M
     "",                                // N
@@ -214,6 +221,7 @@ function convertRawData(value) {
         status: tripRow[16],
         vehicle: tripRow[17],
         driver: tripRow[20],
+        tripKeyID: tripRow[10],
         id: tripRow[23],
         notes: tripRow[24],
         returnOf: tripRow[30] || "",
@@ -239,6 +247,7 @@ function convertRowToTrip(row) {
     status: row[16],                   // Q
     vehicle: row[17],                  // R
     driver: row[20],                   // U
+    tripKeyID: row[10],                // K
     id: row[23],                       // X
     notes: row[24],                    // Y
     returnOf: row[30] || "",           // AE
@@ -249,7 +258,8 @@ function convertRowToTrip(row) {
 
 function dispatchRowToTripObject(row) {
   return {
-    id: row[23],                 // X: Unique trip ID (UUID)
+    tripKeyID: row[10],          // K: TripIDKEY
+    id: row[23],                 // X: Unique trip ID
     date: row[0],                // A: Date
     time: row[1],                // B: Time
     passenger: row[2],           // C: Passenger
