@@ -375,7 +375,34 @@ function backSyncLegacyTripIds() {
       try {
         map = deserializeTripMap(json);
       } catch (e) {
-        map = new Map();
+        Logger.log('⚠️ Error parsing LOG row ' + (idx + 2) + ': ' + e.message);
+        return;
+      }
+
+      // If deserializeTripMap produced an empty map, try legacy array of rows
+      if (map.size === 0) {
+        try {
+          const arr = JSON.parse(json);
+          if (Array.isArray(arr)) {
+            map = new Map();
+            arr.forEach(r => {
+              if (!Array.isArray(r)) return;
+              const tripKeyID = Utils.generateTripId({
+                date: r[0],
+                time: r[2],
+                passenger: r[3],
+                phone: r[6],
+                pickup: r[9],
+                dropoff: r[12]
+              });
+              r[10] = tripKeyID;
+              map.set(tripKeyID, r);
+            });
+          }
+        } catch (e) {
+          Logger.log('⚠️ Error parsing LOG row ' + (idx + 2) + ': ' + e.message);
+          return;
+        }
       }
 
       const updatedMap = new Map();
@@ -396,8 +423,10 @@ function backSyncLegacyTripIds() {
         updatedMap.set(tripKeyID, arr);
       });
 
-      const newJson = JSON.stringify(Array.from(updatedMap.entries()));
-      logSheet.getRange(idx + 2, 2).setValue(newJson);
+      if (updatedMap.size > 0) {
+        const newJson = JSON.stringify(Array.from(updatedMap.entries()));
+        logSheet.getRange(idx + 2, 2).setValue(newJson);
+      }
     });
   } catch (e) {
     Logger.log('❌ Back-sync error: ' + e.message);
