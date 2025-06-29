@@ -93,9 +93,10 @@ function snapshotDispatchToLog(isAlert = false) {
 
     dateToRow[key] = i + 2;
     try {
-      logDataByDate[key] = JSON.parse(row[1] || '{}');
+      logDataByDate[key] = deserializeTripMap(row[1]);
     } catch (e) {
-      logDataByDate[key] = {};
+      Logger.log('parse error: ' + e.message);
+      logDataByDate[key] = new Map();
     }
   });
 
@@ -120,40 +121,41 @@ function snapshotDispatchToLog(isAlert = false) {
       dateKey = Utilities.formatDate(dateObj, Session.getScriptTimeZone(), 'yyyy-MM-dd');
     }
 
+    const tripKeyID = row[10];
     const trip = [...row];
     trip[0] = dateKey || ''; // Keep date format consistent
     trip[2] = time;
+    trip[10] = tripKeyID;
 
-    if (!groupedByDate[dateKey]) groupedByDate[dateKey] = [];
-    groupedByDate[dateKey].push(trip);
+    if (!groupedByDate[dateKey]) groupedByDate[dateKey] = new Map();
+    if (tripKeyID) groupedByDate[dateKey].set(tripKeyID, trip);
   }
 
   // Merge and write
-  for (const [dateKey, dispatchTrips] of Object.entries(groupedByDate)) {
-    const logTrips = logDataByDate[dateKey] || {};
-    const mergedMap = { ...logTrips };
+  for (const [dateKey, dispatchMap] of Object.entries(groupedByDate)) {
+    const logMap = logDataByDate[dateKey] || new Map();
+    dispatchMap.forEach((arr, tripKeyID) => {
+      logMap.set(tripKeyID, arr);
+    });
 
-    for (const row of dispatchTrips) {
-      const obj = dispatchRowToTripObject(row);
-      if (obj.id) mergedMap[obj.id] = obj;
-    }
-
-    const ordered = sortTripMapByTime(mergedMap);
-    const json = JSON.stringify(ordered);
+    const json = JSON.stringify(Array.from(logMap.entries()));
     let row = dateToRow[dateKey];
 
-    if (dateKey === '') {
-      // ➔ Handle undated trips only in row 2
-      row = 2;
-      logSheet.getRange(row, 1).setValue(""); // ensure A2 is blank
-      logSheet.getRange(row, 2).setValue(json);
-    } else {
-      if (row) {
+    try {
+      if (dateKey === '') {
+        row = 2;
+        logSheet.getRange(row, 1).setValue("");
         logSheet.getRange(row, 2).setValue(json);
       } else {
-        const newRow = logSheet.getLastRow() + 1;
-        logSheet.getRange(newRow, 1, 1, 2).setValues([[dateKey, json]]);
+        if (row) {
+          logSheet.getRange(row, 2).setValue(json);
+        } else {
+          const newRow = logSheet.getLastRow() + 1;
+          logSheet.getRange(newRow, 1, 1, 2).setValues([[dateKey, json]]);
+        }
       }
+    } catch (e) {
+      Logger.log('write error: ' + e.message);
     }
   }
 
@@ -199,10 +201,12 @@ function restoreDispatchFromLog(date) {
 
   let parsed;
   try {
-    parsed = JSON.parse(json);
-    if (!Array.isArray(parsed)) {
-      parsed = Object.values(parsed).map(t => Array.isArray(t) ? t : tripObjectToRowArray(t));
-    }
+    const data = deserializeTripMap(json);
+    parsed = Array.from(data.entries()).map(([tripKeyID, v]) => {
+      const row = Array.isArray(v) ? v : tripObjectToRowArray(v);
+      row[10] = tripKeyID;
+      return row;
+    });
   } catch (e) {
     SpreadsheetApp.getUi().alert(`❌ Error parsing snapshot JSON for ${targetDate}`);
     return;
@@ -232,16 +236,20 @@ function restoreDispatchFromLog(date) {
   dispatchSheet.getRange("A2:Y100").clearContent();
 
   // Restore the parsed values
-  if (parsed.length > 0) {
-    dispatchSheet.getRange(2, 1, parsed.length, parsed[0].length).setValues(parsed);
-    dispatchSheet.getRange("J2:J100").setNumberFormat("@STRING@"); // Force plain text
-    dispatchSheet.getRange("J2:J100").setWrapStrategy(SpreadsheetApp.WrapStrategy.CLIP);
+  try {
+    if (parsed.length > 0) {
+      dispatchSheet.getRange(2, 1, parsed.length, parsed[0].length).setValues(parsed);
+      dispatchSheet.getRange("J2:J100").setNumberFormat("@STRING@");
+      dispatchSheet.getRange("J2:J100").setWrapStrategy(SpreadsheetApp.WrapStrategy.CLIP);
 
-    applyFormulas(dispatchSheet, dispatchSheetFormulas);
+      applyFormulas(dispatchSheet, dispatchSheetFormulas);
 
-    SpreadsheetApp.getUi().alert(`✅ Restored ${parsed.length} rows to DISPATCH from ${targetDate}`);
-  } else {
-    SpreadsheetApp.getUi().alert(`⚠️ No rows to restore for ${targetDate}`);
+      SpreadsheetApp.getUi().alert(`✅ Restored ${parsed.length} rows to DISPATCH from ${targetDate}`);
+    } else {
+      SpreadsheetApp.getUi().alert(`⚠️ No rows to restore for ${targetDate}`);
+    }
+  } catch (e) {
+    Logger.log('restore error: ' + e.message);
   }
 }
 
@@ -350,4 +358,63 @@ function promptRestoreSnapshotByDate() {
 
 function maybeSnapshotDispatchToLog() {
   return snapshotDispatchToLog(false);
+}
+
+function backSyncLegacyTripIds() {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const dispatchSheet = ss.getSheetByName('DISPATCH');
+    const logSheet = ss.getSheetByName('LOG');
+
+    const dispatchData = dispatchSheet.getRange('A2:Y100').getValues();
+    const logRange = logSheet.getRange('A2:B101').getValues();
+
+    const dateToRow = {};
+    const logMaps = {};
+    logRange.forEach((row, i) => {
+      const dateVal = row[0];
+      const key = dateVal ? Utilities.formatDate(new Date(dateVal), Session.getScriptTimeZone(), 'yyyy-MM-dd') : '';
+      dateToRow[key] = i + 2;
+      try {
+        logMaps[key] = deserializeTripMap(row[1]);
+      } catch (e) {
+        logMaps[key] = new Map();
+      }
+    });
+
+    dispatchData.forEach((row, idx) => {
+      const passenger = row[3];
+      if (!passenger) return;
+      const dateKey = row[0] ? Utilities.formatDate(new Date(row[0]), Session.getScriptTimeZone(), 'yyyy-MM-dd') : '';
+      let tripKeyID = row[10];
+      if (!tripKeyID) {
+        tripKeyID = Utils.generateTripId({
+          date: row[0],
+          time: row[2],
+          passenger,
+          phone: row[6],
+          pickup: row[9],
+          dropoff: row[12]
+        });
+        dispatchSheet.getRange(idx + 2, 11).setValue(tripKeyID);
+      }
+      const arr = row.slice();
+      arr[10] = tripKeyID;
+      if (!logMaps[dateKey]) logMaps[dateKey] = new Map();
+      logMaps[dateKey].set(tripKeyID, arr);
+    });
+
+    Object.entries(logMaps).forEach(([key, map]) => {
+      const json = JSON.stringify(Array.from(map.entries()));
+      const row = dateToRow[key];
+      if (row) {
+        logSheet.getRange(row, 2).setValue(json);
+      } else {
+        const newRow = logSheet.getLastRow() + 1;
+        logSheet.getRange(newRow, 1, 1, 2).setValues([[key, json]]);
+      }
+    });
+  } catch (e) {
+    Logger.log('❌ Back-sync error: ' + e.message);
+  }
 }
