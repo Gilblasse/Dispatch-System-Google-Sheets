@@ -190,47 +190,13 @@ function tripObjectToRowArray(trip) {
 
 
 function convertRawData(value) {
-  let parsed;
-  try {
-    parsed = JSON.parse(value || "{}");
-  } catch (e) {
-    return [];
-  }
-
-  let items = [];
-  if (Array.isArray(parsed)) {
-    items = parsed;
-  } else if (parsed && typeof parsed === "object") {
-    items = Object.values(parsed);
-  }
-
-  return items.map(tripRow => {
-    if (Array.isArray(tripRow)) {
-      return {
-        date: Utils.formatDateString(tripRow[0]),
-        startTime: tripRow[1],
-        time: tripRow[2],
-        passenger: tripRow[3],
-        dispatchStatus: tripRow[4],
-        transport: tripRow[5],
-        phone: tripRow[6],
-        medicaid: tripRow[7],
-        invoice: tripRow[8],
-        pickup: tripRow[9],
-        dropoff: tripRow[12],
-        status: tripRow[16],
-        vehicle: tripRow[17],
-        driver: tripRow[20],
-        tripKeyID: tripRow[10],
-        id: tripRow[23],
-        notes: tripRow[24],
-        returnOf: tripRow[30] || "",
-        previousId: tripRow[31] || "",
-        standing: (() => { try { return JSON.parse(tripRow[32] || '{}'); } catch (e) { return {}; } })()
-      };
-    }
-    return tripRow;
+  const map = deserializeTripMap(value);
+  const trips = [];
+  map.forEach(val => {
+    const row = Array.isArray(val) ? convertRowToTrip(val) : val;
+    trips.push(row);
   });
+  return trips;
 }
 
 function convertRowToTrip(row) {
