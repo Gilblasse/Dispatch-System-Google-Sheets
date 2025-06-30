@@ -265,36 +265,36 @@ class TripManager {
     range.setValue(JSON.stringify(sortTripMapByTime(trips)));
   }
 
-  deleteStandingOrder(standing) {
-    if (!standing) return;
+  deleteStandingOrder(standingOrder) {
+    if (!standingOrder) return;
     const allTrips = this.getAllTrips();
-    const target = JSON.stringify(standing);
+    const target = JSON.stringify(standingOrder);
     allTrips.forEach(trip => {
       const obj = Array.isArray(trip) ? this.logManager.rowToTrip(trip) : trip;
-      const st = JSON.stringify(obj.standing || {});
+      const st = JSON.stringify(obj.standingOrder || {});
       if (st === target) {
         this.deleteTripFromLog(obj.id, obj.date);
       }
     });
   }
 
-  deleteStandingOrderOnDates(standing, dates) {
-    if (!standing || !Array.isArray(dates)) return;
+  deleteStandingOrderOnDates(standingOrder, dates) {
+    if (!standingOrder || !Array.isArray(dates)) return;
     const normalizedDates = dates.map(d => Utils.formatDateString(d));
     const allTrips = this.getAllTrips();
-    const target = JSON.stringify(standing);
+    const target = JSON.stringify(standingOrder);
     allTrips.forEach(trip => {
       const obj = Array.isArray(trip) ? this.logManager.rowToTrip(trip) : trip;
       console.log(
         obj,
-        JSON.stringify(obj.standing || {}),
+        JSON.stringify(obj.standingOrder || {}),
         target,
         Utils.formatDateString(obj.date),
-        JSON.stringify(obj.standing || {}) === target &&
+        JSON.stringify(obj.standingOrder || {}) === target &&
           normalizedDates.includes(Utils.formatDateString(obj.date))
       );
       if (
-        JSON.stringify(obj.standing || {}) === target &&
+        JSON.stringify(obj.standingOrder || {}) === target &&
         normalizedDates.includes(Utils.formatDateString(obj.date))
       ) {
         this.deleteTripFromLog(obj.id, obj.date);
@@ -311,5 +311,5 @@ function getTripById(encodedId, date) { return tripManager.getTripById(encodedId
 function getAllTrips() { return tripManager.getAllTrips(); }
 function updateTripInLog(trip) { return tripManager.updateTripInLog(trip); }
 function deleteTripFromLog(id, date) { return tripManager.deleteTripFromLog(id, date); }
-function deleteStandingOrder(standing) { return tripManager.deleteStandingOrder(standing); }
-function deleteStandingOrderOnDates(standing, dates) { return tripManager.deleteStandingOrderOnDates(standing, dates); }
+function deleteStandingOrder(standingOrder) { return tripManager.deleteStandingOrder(standingOrder); }
+function deleteStandingOrderOnDates(standingOrder, dates) { return tripManager.deleteStandingOrderOnDates(standingOrder, dates); }

@@ -176,13 +176,14 @@ function tripObjectToRowArray(trip) {
     trip.vehicle || "",                // R
     "", "",                            // S, T
     trip.driver || "",                 // U
-    "", "",                            // V, W
+    "",                                // V (index 21)
+    "",                                // W (index 22)
     trip.id || "",                     // X
     trip.notes || "",                  // Y
     "", "", "", "", "",                // Z - AD
     trip.returnOf || "",               // AE (index 30)
     trip.previousId || "",             // AF (index 31)
-    JSON.stringify(trip.standing || {}) // AG (index 32)
+    JSON.stringify(trip.standingOrder || {}) // AG (index 32)
   ];
 }
 
@@ -218,7 +219,7 @@ function convertRowToTrip(row) {
     notes: row[24],                    // Y
     returnOf: row[30] || "",           // AE
     previousId: row[31] || "",         // AF
-    standing: (() => { try { return JSON.parse(row[32] || '{}'); } catch (e) { return {}; } })()
+    standingOrder: (() => { try { return JSON.parse(row[32] || '{}'); } catch (e) { return {}; } })()
   };
 }
 
@@ -237,10 +238,11 @@ function dispatchRowToTripObject(row) {
     dropoff: row[11],            // L: Drop Off
     vehicle: row[12],            // M: Vehicle
     driver: row[14],             // O: DRIVER
+    standingOrder: (() => { try { return JSON.parse(row[32] || '{}'); } catch (e) { return {}; } })(),
     notes: row[22],              // W: Notes
     returnOf: row[30] || "",     // AE: returnOf (optional)
     status: row[24] || "",       // Y: Status
-    standing: (() => { try { return JSON.parse(row[32] || '{}'); } catch (e) { return {}; } })()
+
   };
 }
 

@@ -23,7 +23,8 @@ class StandingOrderManager {
 
     const parentFields = parentTrip[1];
     const recurringId = parentFields[11];
-    const standingOrder = parentFields[21];
+    const standingOrder = parentFields[32];
+    parentFields[32] = standingOrder;
 
     const lastRow = logSheet.getLastRow();
     const data = lastRow > 1 ? logSheet.getRange(2, 1, lastRow - 1, 2).getValues() : [];
@@ -67,7 +68,7 @@ class StandingOrderManager {
       newFields[0] = dateStr;
       newFields[11] = newId;
       newFields[22] = recurringId;
-      newFields[21] = standingOrder;
+      newFields[32] = standingOrder;
       row.entries.push([newId, newFields]);
     });
 
