@@ -23,8 +23,14 @@ class StandingOrderManager {
 
     const parentFields = parentTrip[1];
     const recurringId = parentFields[11];
-    const standingOrder = parentFields[32];
-    parentFields[32] = standingOrder;
+    const standingOrderJson = parentFields[32];
+    let standingOrderObj = {};
+    try {
+      standingOrderObj = JSON.parse(standingOrderJson || '{}');
+    } catch (e) {
+      standingOrderObj = {};
+    }
+    parentFields[32] = standingOrderJson;
 
     const lastRow = logSheet.getLastRow();
     const data = lastRow > 1 ? logSheet.getRange(2, 1, lastRow - 1, 2).getValues() : [];
@@ -68,8 +74,23 @@ class StandingOrderManager {
       newFields[0] = dateStr;
       newFields[11] = newId;
       newFields[31] = recurringId;
-      newFields[32] = standingOrder;
+      newFields[32] = standingOrderJson;
       row.entries.push([newId, newFields]);
+
+      if (standingOrderObj.withReturnTrip && standingOrderObj.returnTime) {
+        const returnFields = parentFields.slice();
+        const returnId = Utilities.getUuid();
+        returnFields[0] = dateStr;
+        returnFields[11] = returnId;
+        returnFields[2] = standingOrderObj.returnTime;
+        returnFields[9] = parentFields[12];
+        returnFields[12] = parentFields[9];
+        returnFields[24] = ((returnFields[24] || '') + ' [RETURN TRIP]').trim();
+        returnFields[30] = newId;
+        returnFields[31] = recurringId;
+        returnFields[32] = standingOrderJson;
+        row.entries.push([returnId, returnFields]);
+      }
     });
 
     for (const key in rowsCache) {

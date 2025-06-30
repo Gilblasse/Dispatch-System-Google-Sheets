@@ -185,6 +185,9 @@
         if (isStandingOrder) {
           trip.standingOrder.dates = expandedDates;
           trip.standingOrder.withReturnTrip = isReturnTrip;
+          if (isReturnTrip && returnTime) {
+            trip.standingOrder.returnTime = returnTime;
+          }
         }
 
         const tripsToSave = [];
