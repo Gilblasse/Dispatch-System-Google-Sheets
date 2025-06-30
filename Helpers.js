@@ -182,7 +182,7 @@ function tripObjectToRowArray(trip) {
     trip.notes || "",                  // Y
     "", "", "", "", "",                // Z - AD
     trip.returnOf || "",               // AE (index 30)
-    trip.previousId || "",             // AF (index 31)
+    trip.recurringId || "",            // AF (index 31)
     JSON.stringify(trip.standingOrder || {}) // AG (index 32)
   ];
 }
@@ -214,11 +214,11 @@ function convertRowToTrip(row) {
     status: row[16],                   // Q
     vehicle: row[17],                  // R
     driver: row[20],                   // U
+    recurringId: row[31] || "",        // AF
     tripKeyID: row[10],                // K
     id: row[23],                       // X
     notes: row[24],                    // Y
     returnOf: row[30] || "",           // AE
-    previousId: row[31] || "",         // AF
     standingOrder: (() => { try { return JSON.parse(row[32] || '{}'); } catch (e) { return {}; } })()
   };
 }
@@ -239,7 +239,8 @@ function dispatchRowToTripObject(row) {
     vehicle: row[12],            // M: Vehicle
     driver: row[14],             // O: DRIVER
     standingOrder: (() => { try { return JSON.parse(row[32] || '{}'); } catch (e) { return {}; } })(),
-    notes: row[22],              // W: Notes
+    recurringId: row[31] || "",  // AF: recurringId
+    notes: row[24],              // Y: Notes
     returnOf: row[30] || "",     // AE: returnOf (optional)
     status: row[24] || "",       // Y: Status
 

@@ -30,7 +30,7 @@ class TripsTest {
       driver: '',
       notes: 'This is a TEST !!!',
       returnOf: 'orig',
-      previousId: '',
+      recurringId: '',
       standingOrder
     };
     const trip1 = Object.assign({ id: 't1', date: '2024-06-01' }, baseTrip);
