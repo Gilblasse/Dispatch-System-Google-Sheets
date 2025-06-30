@@ -67,7 +67,7 @@ class StandingOrderManager {
       const newId = Utilities.getUuid();
       newFields[0] = dateStr;
       newFields[11] = newId;
-      newFields[22] = recurringId;
+      newFields[31] = recurringId;
       newFields[32] = standingOrder;
       row.entries.push([newId, newFields]);
     });
@@ -88,7 +88,7 @@ class StandingOrderManager {
 
   /**
    * Delete recurring trip instances from specific dates.
-   * @param {string} recurringId Parent tripId stored in fields[22]
+   * @param {string} recurringId Parent tripId stored in fields[31]
    * @param {string[]} datesToDelete Dates to remove (yyyy-MM-dd)
    */
   deleteFromDates(recurringId, datesToDelete) {
@@ -123,7 +123,7 @@ class StandingOrderManager {
       if (!Array.isArray(arr)) return;
       const idx = arr.findIndex(item => {
         const fields = item && item[1];
-        return fields && fields[22] === recurringId;
+        return fields && fields[31] === recurringId;
       });
       if (idx > -1) {
         arr.splice(idx, 1);
