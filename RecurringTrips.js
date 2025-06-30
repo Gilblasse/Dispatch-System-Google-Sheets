@@ -1,8 +1,8 @@
 // Object-oriented utilities for optimized recurring trip management.
 
 class StandingOrderManager {
-  constructor(service = spreadsheetService) {
-    this.service = service;
+  constructor(service) {
+    this.service = service || spreadsheetService;
   }
 
   get logSheet() {
