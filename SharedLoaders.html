@@ -151,9 +151,9 @@
   }
 
   function expandStandingOrder(trip) {
-    if (!trip || !trip.standing) return trip && trip.date ? [trip.date] : [];
+    if (!trip || !trip.standingOrder) return trip && trip.date ? [trip.date] : [];
 
-    const { startDate, endDate, frequency, days = [] } = trip.standing;
+    const { startDate, endDate, frequency, days = [] } = trip.standingOrder;
     if (!startDate || !endDate) return trip.date ? [trip.date] : [];
 
     const start = parseLocalDate(startDate);

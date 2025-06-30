@@ -191,7 +191,7 @@
           return;
         }
 
-        if (currentTrip && currentTrip.standing && Object.keys(currentTrip.standing).length) {
+        if (currentTrip && currentTrip.standingOrder && Object.keys(currentTrip.standingOrder).length) {
           openDeleteModal();
           return;
         }
@@ -261,7 +261,7 @@
           })
           .withFailureHandler(handleError);
 
-        runner.deleteStandingOrderOnDates(currentTrip.standing, selected);
+        runner.deleteStandingOrderOnDates(currentTrip.standingOrder, selected);
       }
     </script>
   </body>

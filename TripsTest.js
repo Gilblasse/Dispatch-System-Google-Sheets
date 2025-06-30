@@ -8,7 +8,7 @@ class TripsTest {
     const service = new SpreadsheetService({ Dispatcher: ss.getId() });
     const manager = new TripManager(service, logManager);
 
-    const standing = {
+    const standingOrder = {
       frequency: 'DAILY',
       startDate: '2024-06-01',
       endDate: '2024-06-05',
@@ -31,7 +31,7 @@ class TripsTest {
       notes: 'This is a TEST !!!',
       returnOf: 'orig',
       previousId: '',
-      standing
+      standingOrder
     };
     const trip1 = Object.assign({ id: 't1', date: '2024-06-01' }, baseTrip);
     const trip2 = Object.assign({ id: 't2', date: '2024-06-02' }, baseTrip);
@@ -39,7 +39,7 @@ class TripsTest {
     manager.addTripToLog(trip1);
     manager.addTripToLog(trip2);
 
-    manager.deleteStandingOrderOnDates(standing, ['2024-06-01']);
+    manager.deleteStandingOrderOnDates(standingOrder, ['2024-06-01']);
 
     const remaining = manager.getAllTrips().map(t => t.id);
     if (remaining.length !== 1 || remaining[0] !== 't2') {
