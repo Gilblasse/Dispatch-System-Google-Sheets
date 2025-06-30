@@ -68,14 +68,14 @@ class TripManager {
     }
     const normalizedDate = Utils.formatDateString(trip.date || '');
     let rowIndex = -1;
-    let trips = {};
+    let tripsMap = new Map();
     if (normalizedDate === '') {
       rowIndex = 0;
       try {
-        trips = JSON.parse(allData[0]?.[1] || '{}');
+        tripsMap = deserializeTripMap(allData[0]?.[1]);
       } catch (e) {
         Logger.log('⚠️ Could not parse JSON in B2.');
-        trips = {};
+        tripsMap = new Map();
       }
     } else {
       rowIndex = allData.findIndex(row => {
@@ -86,18 +86,19 @@ class TripManager {
       });
       if (rowIndex !== -1) {
         try {
-          trips = JSON.parse(allData[rowIndex][1] || '{}');
+          tripsMap = deserializeTripMap(allData[rowIndex][1]);
         } catch (e) {
           Logger.log('⚠️ Could not parse JSON in row ' + (rowIndex + 2));
-          trips = {};
+          tripsMap = new Map();
         }
       } else {
         sheet.appendRow([normalizedDate, '{}']);
         rowIndex = sheet.getLastRow() - 2;
+        tripsMap = new Map();
       }
     }
-    trips[trip.id] = trip;
-    const ordered = sortTripMapByTime(trips);
+    tripsMap.set(trip.id, trip);
+    const ordered = sortTripMapByTime(Object.fromEntries(tripsMap));
     sheet.getRange(rowIndex + 2, jsonCol).setValue(JSON.stringify(ordered));
 
     // update cache for this date
