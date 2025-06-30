@@ -409,7 +409,7 @@ function backSyncLegacyTripIds() {
       map.forEach((val, key) => {
         const arr = Array.isArray(val) ? val.slice() : tripObjectToRowArray(val);
         let tripKeyID = key || arr[10];
-        if (!tripKeyID) {
+        if (!tripKeyID || tripKeyID === 'null' || tripKeyID === 'undefined') {
           tripKeyID = Utils.generateTripId({
             date: arr[0],
             time: arr[2],
