@@ -1,6 +1,7 @@
-class SpreadsheetService {
+class AmazingGraceTransportSpreadsheetService {
   constructor(ids = ssIds) {
-    this.ids = ids || {};
+    this.ids = ids ||
+    {};
   }
 
   openSpreadsheet(name) {
@@ -14,4 +15,4 @@ class SpreadsheetService {
   }
 }
 
-const spreadsheetService = new SpreadsheetService();
+const spreadsheetService = new AmazingGraceTransportSpreadsheetService();

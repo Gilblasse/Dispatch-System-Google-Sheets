@@ -1,6 +1,7 @@
 const driversSheetID = '13rpPjV3KOxfQw9W6ARA-KWSkxNI7qy6oqp4fwvlchlA'
 const dispatchSheetID = '1oc_ac8XTmjcoUjy0l_vj6m5j4YYVFuRykybSHToDAME'
 const prodUrl = "https://us-central1-agmtlambdaapi.cloudfunctions.net/trips"
+const driversDataLinkedRangeHeight = 230
 
 const dispatchSheetFormulas = {
   "L2:L100": `=IFERROR(INDEX('drivers data linked'!$A$2:$O$${driversDataLinkedRangeHeight},MATCH(X2,'drivers data linked'!$O$2:$O$${driversDataLinkedRangeHeight},0),MATCH($L$1,'drivers data linked'!$A$1:$O$1,0)),"")`,
@@ -17,7 +18,7 @@ const dispatchSheetFormulas = {
   "T2:T100": `=IFERROR(VLOOKUP(R2,vehicles!$C$2:$F$50,4,0),"")`,
   "V2:V100": `=IFERROR(VLOOKUP(U2,drivers!$A$2:$C$14,2,0),"")`,
     "W2:W100": `=IFERROR(VLOOKUP(U2,drivers!$A$2:$C$14,3,false),"")`,
-    "X2:X100": `=IF(D2="","", U2&"|"&A2&"|"&C2&"|"&D2&"|"&J2)`,   
+    "X2:X100": `=IF(D2="","", U2&"|"&A2&"|"&C2&"|"&D2&"|"&J2)`,
 }
 
 const dispatchSheetFormulasB = {
@@ -48,7 +49,7 @@ const dataSheetDefault = {
   cellRange:'A1:Y100',
   ssName:null,
   sheetName:null,
-  limit:1, 
+  limit:1,
   list:[],
   isKeep: false,
   headerRange: null
@@ -56,7 +57,7 @@ const dataSheetDefault = {
 
 const fullPgProps={
   dispatch: {
-    cellRange:'A1:Y100', 
-    sheetName: "DISPATCH", 
+    cellRange:'A1:Y100',
+    sheetName: "DISPATCH",
   },
 }

@@ -36,8 +36,6 @@ function onOpen() {
 }
 
 const TZ = Session.getScriptTimeZone();
-const driversDataLinkedRangeHeight = 230
-
 
 
 function include(filename) {
@@ -108,13 +106,13 @@ function getEmailList() {
 
 function grantAccessToEmails(data) {
   var sss = SpreadsheetApp.getActiveSpreadsheet();
-  
+
   if (!data || !data.selectedEmails || !data.permissionType) {
     throw new Error("Missing required input. Please select emails and permission type.");
   }
 
   const { selectedEmails, permissionType } = data;
-  
+
   const targetSS = SpreadsheetApp.openById("13rpPjV3KOxfQw9W6ARA-KWSkxNI7qy6oqp4fwvlchlA");
   const docUrl = targetSS.getUrl();
   const docName = targetSS.getName();
@@ -176,7 +174,7 @@ function submitButton(){
   } else {
     Logger.log('The user clicked the close button in the dialog\'s title bar.');
   }
-  
+
 }
 
 
@@ -184,32 +182,32 @@ function submitButton(){
 //1.  ******* TRANSFER      UPDATE RANGE TO Y100  !!!
 function transfer() {
  var sss = SpreadsheetApp.getActiveSpreadsheet();
- var ss = sss.getSheetByName('DISPATCH'); 
- var range = ss.getRange('A2:Y100'); 
+ var ss = sss.getSheetByName('DISPATCH');
+ var range = ss.getRange('A2:Y100');
  var data = range.getValues();
 
  var tss = SpreadsheetApp.openById("1nEAxrzYy4cRMw7NLEupYUEe0eB0wP11LyzDVA_kDm8Y");
  var ts = tss.getSheetByName('Year2019');
  ts.getRange(ts.getLastRow()+1, 1, data.length, data[0].length).setValues(data);
-  
+
  // CALLS SORT FUNCTION sortClients();
 //  sortClients();
 }
-  
 
 
 
-//3.  ******* CLEARS LOGS 
+
+//3.  ******* CLEARS LOGS
 function DeleteNewEntries() {
 var ss = SpreadsheetApp.openById("1nEAxrzYy4cRMw7NLEupYUEe0eB0wP11LyzDVA_kDm8Y");
 var sheet = ss.getSheetByName("Year2019");
 var datarange = sheet.getDataRange();
-var lastrow = sheet.getRange("AC1").getValue(); 
+var lastrow = sheet.getRange("AC1").getValue();
 var values = datarange.getValues();// get all data in a 2D array
 var subRow = lastrow-50;
 var currentDate = Utilities.formatDate(new Date(), 'America/New_York', "MM-dd-yyyy");//today
 var count=0;
- 
+
   for (i=lastrow;i>=subRow;i--) {
     var statusArray = values[i-1][16];//values[i-1][0]
     var tempDate = Utilities.formatDate(new Date(), 'America/New_York', "MM-dd-yyyy");// arrays are 0 indexed so row1 = values[0] and col3 = [2]
@@ -233,15 +231,15 @@ var count=0;
 
 function clearRows(){
 
-var ss = SpreadsheetApp.openById("1oc_ac8XTmjcoUjy0l_vj6m5j4YYVFuRykybSHToDAME"); 
-var sheet = ss.getSheetByName('DISPATCH'); 
+var ss = SpreadsheetApp.openById("1oc_ac8XTmjcoUjy0l_vj6m5j4YYVFuRykybSHToDAME");
+var sheet = ss.getSheetByName('DISPATCH');
 var today = String(new Date()).slice(0,3);
 var sheetRange = sheet.getRange(1, 1, 101, 26).getValues(); //2, 1, 49, 17   ( row, col, numRows, numCol )
 
   for(i=1;i<=50;i++){
     var cellDateArry = String(sheetRange[(i-1)][0]).slice(0,3);
     var statusArry = sheetRange[(i-1)][16];
-      
+
       if((cellDateArry == today)&&(statusArry == 'CANCEL')||(statusArry == 'COMPLETE')||(statusArry == 'NO SHOW')||(statusArry == 'REASSIGN')){
         sheet.getRange("A"+i+":E"+i).clearContent();
         sheet.getRange("I"+i+":J"+i).clearContent();
@@ -263,16 +261,16 @@ var sheetRange = sheet.getRange(1, 1, 101, 26).getValues(); //2, 1, 49, 17   ( r
 function autoClearRows(){
 
 var ss = SpreadsheetApp.openById("1oc_ac8XTmjcoUjy0l_vj6m5j4YYVFuRykybSHToDAME");
-var sheet = ss.getSheetByName('DISPATCH'); 
+var sheet = ss.getSheetByName('DISPATCH');
 var today = String(new Date()).slice(0,3);
 var sheetRange = sheet.getRange(1, 1, 101, 26).getValues(); //2, 1, 49, 17   ( row, col, numRows, numCol )
-  
+
   // Loop through all rows
   for(i=1;i<=50;i++){
-    
+
     var cellDateArry = String(sheetRange[(i-1)][0]).slice(0,3);
     var statusArry = sheetRange[(i-1)][16];
-      
+
       if((cellDateArry == today)&&(statusArry == 'CANCEL')||(statusArry == 'COMPLETE')||(statusArry == 'NO SHOW')||(statusArry == 'REASSIGN')){
 //        Logger.log(cellDateArry + ' | '+ today + ' | '+ statusArry + ' ' + '('+ i +')');
 //        Logger.log("A"+i+":E"+i);
@@ -305,30 +303,30 @@ function clearDrivers() {
 //var ss = SpreadsheetApp.openById("1FpAqzX17kwMQiEKhRncjgY4mbcQcKf--4deVwuG-hhY");
   var ss = SpreadsheetApp.openById("13rpPjV3KOxfQw9W6ARA-KWSkxNI7qy6oqp4fwvlchlA");
 
-var sheets = ss.getSheets(); 
-  
-  for(var i=1;i<=sheets.length;i++){ 
+var sheets = ss.getSheets();
+
+  for(var i=1;i<=sheets.length;i++){
   var sheetName = sheets[i-1].getName();
-  var sheet = sheets[i-1];    
+  var sheet = sheets[i-1];
   var miscSheet = sheets[i-1].getName().slice(0,5);
 //    Logger.log(miscSheet);
-    
+
     if ((sheetName == 'Schedule Links')||(sheetName == 'DATA')||(sheetName == 'MASTER DRIVERS DATA LINKED')||(sheetName == 'HOME')) {
 //        Logger.log(sheetName+''+"skipped");
-      
+
     } else if(miscSheet == "Sheet"){// Deletes extra sheets named Sheet1, Sheet2, ect...
 //      Logger.log(sheetName+''+'misc');
         ss.deleteSheet(sheet);
-      
+
     }else{
-      
+
       var dataRange = sheet.getDataRange();
       var values = dataRange.getValues();
-      
+
       for (var y = 0; y < values.length; y++) {
         var row = "";
-        for (var j = 0; j < values[y].length; j++) { 
-          
+        for (var j = 0; j < values[y].length; j++) {
+
           if ((values[y][j] == "COMPLETE")||(values[y][j-10] == "CANCEL")||(values[y][j] == "NO SHOW")||(values[y][j] == "CANCEL")) {
             row = values[y][j-6];
             var num = y+1;
@@ -338,7 +336,7 @@ var sheets = ss.getSheets();
             sheet.getRange("V"+num+":V"+num).clearContent().setNumberFormat("h:mm AM/PM");
           }
         }
-      }// else forLoop  
+      }// else forLoop
        };//else
    };//for loop
 };//close function
@@ -354,30 +352,30 @@ var sheets = ss.getSheets();
 function clearDriversStatus(){
 //var ss = SpreadsheetApp.openById("1FpAqzX17kwMQiEKhRncjgY4mbcQcKf--4deVwuG-hhY");
   var ss = SpreadsheetApp.openById("13rpPjV3KOxfQw9W6ARA-KWSkxNI7qy6oqp4fwvlchlA");
-var sheets = ss.getSheets(); 
-  
-  for(var i=1;i<=sheets.length;i++){ 
+var sheets = ss.getSheets();
+
+  for(var i=1;i<=sheets.length;i++){
   var sheetName = sheets[i-1].getName();
-  var sheet = sheets[i-1];    
+  var sheet = sheets[i-1];
   var miscSheet = sheets[i-1].getName().slice(0,5);
 //    Logger.log(miscSheet);
-    
+
     if ((sheetName == 'Schedule Links')||(sheetName == 'DATA')||(sheetName == 'MASTER DRIVERS DATA LINKED')||(sheetName == 'HOME')) {
 //        Logger.log(sheetName+''+"skipped");
-      
+
     }else if(miscSheet == "Sheet"){// Deletes extra sheets named Sheet1, Sheet2, ect...
 //      Logger.log(sheetName+''+'misc');
         ss.deleteSheet(sheet);
-      
+
     }else{
-      
+
       var dataRange = sheet.getDataRange();
       var values = dataRange.getValues();
-      
+
       for (var y = 0; y < values.length; y++) {
         var row = "";
-        for (var j = 0; j < values[y].length; j++) { 
-          
+        for (var j = 0; j < values[y].length; j++) {
+
           if ((values[y][j] == "COMPLETE")||(values[y][j-10] == "CANCEL")||(values[y][j] == "NO SHOW")||(values[y][j] == "CANCEL")) {
             row = values[y][j-6];
             var num = y+1;
@@ -385,9 +383,9 @@ var sheets = ss.getSheets();
             sheet.getRange("M"+num+":M"+num).clearContent().setNumberFormat("h:mm AM/PM");
             sheet.getRange("P"+num+":P"+num).clearContent();
           }
-        }    
-      }// else forLoop  
-  
+        }
+      }// else forLoop
+
        };//else
    };//for loop
   sortDriversTime();
@@ -401,34 +399,34 @@ function autoClearDriversStatus(){
 //var ss = SpreadsheetApp.openById("1FpAqzX17kwMQiEKhRncjgY4mbcQcKf--4deVwuG-hhY");
   var ss = SpreadsheetApp.openById("13rpPjV3KOxfQw9W6ARA-KWSkxNI7qy6oqp4fwvlchlA");
 
-var sheets = ss.getSheets(); 
-  
-  for(var i=1;i<=sheets.length;i++){ 
+var sheets = ss.getSheets();
+
+  for(var i=1;i<=sheets.length;i++){
   var sheetName = sheets[i-1].getName();
-  var sheet = sheets[i-1];    
+  var sheet = sheets[i-1];
   var miscSheet = sheets[i-1].getName().slice(0,5);
 //    Logger.log(miscSheet);
-    
+
     if ((sheetName == 'Schedule Links')||(sheetName == 'DATA')||(sheetName == 'MASTER DRIVERS DATA LINKED')||(sheetName == 'HOME')) {
 //        Logger.log(sheetName+''+"skipped");
-      
+
     }else{
-      
+
       var dataRange = sheet.getDataRange();
       var values = dataRange.getValues();
-      
+
       for (var y = 0; y < values.length; y++) {
         var row = "";
-        for (var j = 0; j < values[y].length; j++) { 
-          
+        for (var j = 0; j < values[y].length; j++) {
+
           if ((values[y][j] == "COMPLETE")||(values[y][j-10] == "CANCEL")||(values[y][j] == "NO SHOW")||(values[y][j] == "CANCEL")) {
             row = values[y][j-6];
             var num = y+1;
             sheet.getRange("P"+num+":P"+num).clearContent();
           }
-        }    
-      }// else forLoop  
-  
+        }
+      }// else forLoop
+
        };//else
    };//for loop
   autoSortDriversTime();
@@ -441,26 +439,26 @@ function clearTimes(){
 //var ss = SpreadsheetApp.openById("1FpAqzX17kwMQiEKhRncjgY4mbcQcKf--4deVwuG-hhY");
   var ss = SpreadsheetApp.openById("13rpPjV3KOxfQw9W6ARA-KWSkxNI7qy6oqp4fwvlchlA");
 
-var sheets = ss.getSheets(); 
-  
-  for(var i=1;i<=sheets.length;i++){ 
+var sheets = ss.getSheets();
+
+  for(var i=1;i<=sheets.length;i++){
   var sheetName = sheets[i-1].getName();
-  var sheet = sheets[i-1];    
+  var sheet = sheets[i-1];
   var miscSheet = sheets[i-1].getName().slice(0,5);
 //    Logger.log(miscSheet);
-    
+
     if ((sheetName == 'Schedule Links')||(sheetName == 'DATA')||(sheetName == 'MASTER DRIVERS DATA LINKED')||(sheetName == 'HOME')) {
 //        Logger.log(sheetName+''+"skipped");
-      
+
     }else{
-      
+
       var dataRange = sheet.getDataRange();
       var values = dataRange.getValues();
-      
+
       for (var y = 0; y < values.length; y++) {
         var row = "";
-        for (var j = 0; j < values[y].length; j++) { 
-          
+        for (var j = 0; j < values[y].length; j++) {
+
           if ((values[y][j] == "COMPLETE")||(values[y][j-10] == "CANCEL")||(values[y][j] == "NO SHOW")||(values[y][j] == "CANCEL")) {
             row = values[y][j-6];
             var num = y+1;
@@ -468,9 +466,9 @@ var sheets = ss.getSheets();
             sheet.getRange("M"+num+":M"+num).clearContent();
             sheet.getRange("P"+num+":P"+num).clearContent();
           }
-        }    
-      }// else forLoop  
-  
+        }
+      }// else forLoop
+
        };//else
    };//for loop
 }//close function
@@ -480,7 +478,7 @@ var sheets = ss.getSheets();
 
 
 function clearDriversAllInput(){
-  
+
     var ui = SpreadsheetApp.getUi();
     var response = ui.alert('All Completed,Canceld & No Show Staus with times will be Cleared on Drivers Side. Are You Sure?', ui.ButtonSet.YES_NO);
 // var finished = ui.alert('COMPLETED', ui.Button.OK);
@@ -488,47 +486,47 @@ function clearDriversAllInput(){
  // Process the user's response.
  if (response == ui.Button.NO) {
    Logger.log('The user\'s name is %s.', response.NO);
-   
+
  } else if (response == ui.Button.YES) {
      clearDriversAllInput2();
 //     finished;
-   
-   
+
+
 //   Logger.log('The user\'s name is %s.', response.YES);
  } else {
    Logger.log('The user clicked the close button in the dialog\'s title bar.');
  }
-  
+
 }
 
 function clearDriversAllInput2(){
 //var ss = SpreadsheetApp.openById("1FpAqzX17kwMQiEKhRncjgY4mbcQcKf--4deVwuG-hhY");
   var ss = SpreadsheetApp.openById("13rpPjV3KOxfQw9W6ARA-KWSkxNI7qy6oqp4fwvlchlA");
 
-var sheets = ss.getSheets(); 
-  
-  for(var i=1;i<=sheets.length;i++){ 
+var sheets = ss.getSheets();
+
+  for(var i=1;i<=sheets.length;i++){
   var sheetName = sheets[i-1].getName();
-  var sheet = sheets[i-1];    
+  var sheet = sheets[i-1];
   var miscSheet = sheets[i-1].getName().slice(0,5);
 //    Logger.log(miscSheet);
-    
+
     if ((sheetName == 'Schedule Links')||(sheetName == 'DATA')||(sheetName == 'MASTER DRIVERS DATA LINKED')||(sheetName == 'HOME')) {
 //        Logger.log(sheetName+''+"skipped");
-      
+
     } else if(miscSheet == "Sheet"){// Deletes extra sheets named Sheet1, Sheet2, ect...
 //      Logger.log(sheetName+''+'misc');
         ss.deleteSheet(sheet);
-      
+
     }else{
-      
+
       var dataRange = sheet.getDataRange();
       var values = dataRange.getValues();
-      
+
       for (var y = 0; y < values.length; y++) {
         var row = "";
-        for (var j = 0; j < values[y].length; j++) { 
-          
+        for (var j = 0; j < values[y].length; j++) {
+
           if ((values[y][j] == "COMPLETE")||(values[y][j-10] == "CANCEL")||(values[y][j] == "NO SHOW")||(values[y][j] == "CANCEL")) {
             row = values[y][j-6];
             var num = y+1;
@@ -538,9 +536,9 @@ var sheets = ss.getSheets();
             sheet.getRange("U"+num+":U"+num).clearContent();
             sheet.getRange("V"+num+":V"+num).clearContent();
           }
-        }    
-      }// else forLoop  
-  
+        }
+      }// else forLoop
+
        };//else
    };//for loop
 }
@@ -550,17 +548,17 @@ function sortDriversTime(){
 //var ss = SpreadsheetApp.openById("1FpAqzX17kwMQiEKhRncjgY4mbcQcKf--4deVwuG-hhY");
   var ss = SpreadsheetApp.openById("13rpPjV3KOxfQw9W6ARA-KWSkxNI7qy6oqp4fwvlchlA");
 
-var sheets = ss.getSheets(); 
-  
-  for(var i=1;i<=sheets.length;i++){ 
+var sheets = ss.getSheets();
+
+  for(var i=1;i<=sheets.length;i++){
   var sheetName = sheets[i-1].getName();
-  var sheet = sheets[i-1];    
+  var sheet = sheets[i-1];
   var miscSheet = sheets[i-1].getName().slice(0,5);
 //    Logger.log(miscSheet);
-    
+
     if ((sheetName == 'Schedule Links')||(sheetName == 'DATA')||(sheetName == 'MASTER DRIVERS DATA LINKED')||(sheetName == 'HOME')) {
 //        Logger.log(sheetName+''+"skipped");
-      
+
     }else{
        sheet.getRange("J6:J18").sort({column: 10, ascending: true}).setNumberFormat("h:mm AM/PM");
        sheet.getRange("M6:M18").sort({column: 13, ascending: true}).setNumberFormat("h:mm AM/PM");
@@ -570,7 +568,7 @@ var sheets = ss.getSheets();
        };//else
    };//for loop
 //  nextStep();
-}// close function 
+}// close function
 
 
 
@@ -579,17 +577,17 @@ function autoSortDriversTime(){
 //var ss = SpreadsheetApp.openById("1FpAqzX17kwMQiEKhRncjgY4mbcQcKf--4deVwuG-hhY");
   var ss = SpreadsheetApp.openById("13rpPjV3KOxfQw9W6ARA-KWSkxNI7qy6oqp4fwvlchlA");
 
-var sheets = ss.getSheets(); 
-  
-  for(var i=1;i<=sheets.length;i++){ 
+var sheets = ss.getSheets();
+
+  for(var i=1;i<=sheets.length;i++){
   var sheetName = sheets[i-1].getName();
-  var sheet = sheets[i-1];    
+  var sheet = sheets[i-1];
   var miscSheet = sheets[i-1].getName().slice(0,5);
 //    Logger.log(miscSheet);
-    
+
     if ((sheetName == 'Schedule Links')||(sheetName == 'DATA')||(sheetName == 'MASTER DRIVERS DATA LINKED')||(sheetName == 'HOME')) {
 //        Logger.log(sheetName+''+"skipped");
-      
+
     }else{
        sheet.getRange("J6:J18").sort({column: 10, ascending: true}).setNumberFormat("h:mm AM/PM");
        sheet.getRange("M6:M18").sort({column: 13, ascending: true}).setNumberFormat("h:mm AM/PM");
@@ -599,7 +597,7 @@ var sheets = ss.getSheets();
        };//else
    };//for loop
   submitTime();
-}// close function 
+}// close function
 
 
 
@@ -607,7 +605,7 @@ var sheets = ss.getSheets();
 
 
 function nextStep(){
-  
+
     var ui = SpreadsheetApp.getUi();
     var response = ui.alert('Would You Like To Submit The TimeSheet?', ui.ButtonSet.YES_NO);
 // var finished = ui.alert('COMPLETED', ui.Button.OK);
@@ -615,17 +613,17 @@ function nextStep(){
  // Process the user's response.
  if (response == ui.Button.NO) {
    Logger.log('The user\'s name is %s.', response.NO);
-   
+
  } else if (response == ui.Button.YES) {
      submitTime();
 //     finished;
-   
-   
+
+
 //   Logger.log('The user\'s name is %s.', response.YES);
  } else {
    Logger.log('The user clicked the close button in the dialog\'s title bar.');
  }
-  
+
 }
 
 
@@ -634,12 +632,12 @@ function nextStep(){
 
 //2.  ******* SORT LOGS
 function sortClients() {
-  
+
   var ss = SpreadsheetApp.openById("1nEAxrzYy4cRMw7NLEupYUEe0eB0wP11LyzDVA_kDm8Y");
   var sheet= ss.getSheetByName("Year2019");
   var range = sheet.getRange("A2:Y");
 
-  
+
  range.sort([{column: 1, ascending: true}]);
 // range.sort([{column: 1, ascending: true}, {column: 3, ascending: true}]);
  }
@@ -664,15 +662,15 @@ function sortClients() {
 //
 //function clearNotes() {
 ////  copyNotes();
-////  sortNotes();   
+////  sortNotes();
 //  clearTech();
 // }
 //
 //
 //function copyNotes() {
 // var sss = SpreadsheetApp.getActiveSpreadsheet();
-// var ss = sss.getSheetByName('NOTES'); 
-// var range = ss.getRange('A4:D100'); 
+// var ss = sss.getSheetByName('NOTES');
+// var range = ss.getRange('A4:D100');
 // var data = range.getValues();
 //
 // var tss = SpreadsheetApp.openById("1VyXQ1kvLEwWaT4mnz0Gucx4bxpDp1KxBGP2B6iKdh-o")
@@ -683,11 +681,11 @@ function sortClients() {
 //
 //
 //function sortNotes() {
-//  
+//
 //  var ss = SpreadsheetApp.openById("1VyXQ1kvLEwWaT4mnz0Gucx4bxpDp1KxBGP2B6iKdh-o");
 //  var sheet= ss.getSheetByName("note logs");
 //  var range = sheet.getRange("A2:D");
-//  
+//
 // range.sort([{column: 1, ascending: true}]);
 //}
 //
@@ -707,21 +705,21 @@ function sortClients() {
 // Transfers indivisual rows to Log sheet (it takes to long)->(its better to copy everything then clear certain rows).
 //function pasteRow() {
 // var sss = SpreadsheetApp.openById("1oc_ac8XTmjcoUjy0l_vj6m5j4YYVFuRykybSHToDAME");
-// var ss = sss.getSheetByName('DISPATCH'); 
+// var ss = sss.getSheetByName('DISPATCH');
 // var today = String(new Date()).slice(0,3);
-//  
+//
 //  // Loop through all rows
 //  for(i=2;i<50;i++){
 //    var rowDate = ss.getRange(i,1).getValue();
 //    var status = ss.getRange(i,17).getValue();
 //    var cellDate = String(rowDate).slice(0, 3);
-//    
+//
 //    // Today's date matches Cell date
 //    if(cellDate == today){
 //      if((status == 'CANCEL')||(status == 'COMPLETE')||(status == 'NO SHOW')){
 //       var range = ss.getRange("A"+i+":Y"+i);
 //       var data = range.getValues();
-//       
+//
 //       // If everything matches Paste row to Log Sheet
 //       var tss = SpreadsheetApp.openById("14_v6veom5CI5ILYoY5V1KV2ttw8RqmFUrmVpsiiNkgk")
 //       var ts = tss.getSheetByName('Log');
@@ -742,13 +740,13 @@ function sortClients() {
 //
 //  for (i=lastrow;i>=3;i--) {
 //    var cellDate = values[i-1][0];// arrays are 0 indexed so row1 = values[0] and col3 = [2]
-//    
+//
 //    if (cellDate >= currentDate){
 //       sheet.getRange("A"+i+":Y"+i).clearContent();
 //    };
-//    
+//
 //  };
-  
+
 //
 //function DeleteNewEntries() {
 //var ss = SpreadsheetApp.openById("14_v6veom5CI5ILYoY5V1KV2ttw8RqmFUrmVpsiiNkgk");
