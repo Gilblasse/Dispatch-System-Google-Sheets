@@ -51,16 +51,15 @@ class StandingOrderManager {
         if (rowIndex) {
           const json = logSheet.getRange(rowIndex, 2).getValue();
           try {
-            let arr = JSON.parse(json || '[]');
-            if (!Array.isArray(arr)) arr = [];
-            rowsCache[dateStr] = { index: rowIndex, entries: arr };
+            const map = deserializeTripMap(json);
+            rowsCache[dateStr] = { index: rowIndex, map };
           } catch (e) {
-            rowsCache[dateStr] = { index: rowIndex, entries: [] };
+            rowsCache[dateStr] = { index: rowIndex, map: new Map() };
           }
         } else {
           rowIndex = logSheet.getLastRow() + 1;
           logSheet.appendRow([dateStr, '[]']);
-          rowsCache[dateStr] = { index: rowIndex, entries: [] };
+          rowsCache[dateStr] = { index: rowIndex, map: new Map() };
           dateToRow[dateStr] = rowIndex;
         }
       }
@@ -75,7 +74,9 @@ class StandingOrderManager {
       newFields[11] = newId;
       newFields[31] = recurringId;
       newFields[32] = standingOrderJson;
-      row.entries.push([newId, newFields]);
+      const newTrip = convertRowToTrip(newFields);
+      newTrip.id = newId;
+      row.map.set(newId, newTrip);
 
       if (standingOrderObj.withReturnTrip && standingOrderObj.returnTime) {
         const returnFields = parentFields.slice();
@@ -89,21 +90,16 @@ class StandingOrderManager {
         returnFields[30] = newId;
         returnFields[31] = recurringId;
         returnFields[32] = standingOrderJson;
-        row.entries.push([returnId, returnFields]);
+        const returnTrip = convertRowToTrip(returnFields);
+        returnTrip.id = returnId;
+        row.map.set(returnId, returnTrip);
       }
     });
 
     for (const key in rowsCache) {
       const info = rowsCache[key];
-      const list = info.entries;
-      if (list.length > 2) {
-        list.sort((a, b) => {
-          const ta = new Date(a[1][2]).getTime();
-          const tb = new Date(b[1][2]).getTime();
-          return ta - tb;
-        });
-      }
-      logSheet.getRange(info.index, 1, 1, 2).setValues([[key, JSON.stringify(list)]]);
+      logSheet.getRange(info.index, 1, 1, 2)
+        .setValues([[key, serializeTripMap(info.map)]]);
     }
   }
 
@@ -135,20 +131,21 @@ class StandingOrderManager {
       const cell = logSheet.getRange(rowIndex, 2);
       const json = cell.getValue();
       if (!json) return;
-      let arr;
+      let map;
       try {
-        arr = JSON.parse(json);
+        map = deserializeTripMap(json);
       } catch (e) {
-        arr = [];
+        map = new Map();
       }
-      if (!Array.isArray(arr)) return;
-      const idx = arr.findIndex(item => {
-        const fields = item && item[1];
-        return fields && fields[31] === recurringId;
+      let changed = false;
+      Array.from(map.entries()).forEach(([id, trip]) => {
+        if (trip && trip.recurringId === recurringId) {
+          map.delete(id);
+          changed = true;
+        }
       });
-      if (idx > -1) {
-        arr.splice(idx, 1);
-        cell.setValue(JSON.stringify(arr));
+      if (changed) {
+        cell.setValue(serializeTripMap(map));
       }
     });
   }
