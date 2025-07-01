@@ -51,6 +51,51 @@ class TripsTest {
     DriveApp.getFileById(ss.getId()).setTrashed(true);
   }
 
+  backSyncLogObjectsUsesTripKeyID() {
+    const ss = SpreadsheetApp.create('BackSyncLogObjectsTest');
+    const sheet = ss.getSheets()[0];
+    sheet.setName('LOG');
+    sheet.getRange('A1:B1').setValues([['Date', 'Trips']]);
+
+    const service = new SpreadsheetService({ Dispatcher: ss.getId() });
+    const manager = new TripManager(service, logManager);
+
+    const trip = {
+      id: 't1',
+      tripKeyID: 'key123',
+      date: '2024-07-01',
+      time: '10:00',
+      passenger: 'P',
+      transport: 'V',
+      phone: '555',
+      medicaid: 'M',
+      invoice: 'I',
+      pickup: 'A',
+      dropoff: 'B',
+      status: '',
+      vehicle: '',
+      driver: '',
+      notes: '',
+      returnOf: '',
+      recurringId: ''
+    };
+
+    const map = new Map([['wrong', trip]]);
+    sheet.appendRow(['2024-07-01', serializeTripMap(map)]);
+
+    backSyncLogObjects();
+
+    const updated = deserializeTripMap(sheet.getRange(2, 2).getValue());
+    const key = Array.from(updated.keys())[0];
+    if (key !== 'key123') {
+      throw new Error('backSyncLogObjects did not persist tripKeyID');
+    } else {
+      Logger.log('testBackSyncLogObjectsUsesTripKeyID passed');
+    }
+
+    DriveApp.getFileById(ss.getId()).setTrashed(true);
+  }
+
   testOnEdit() {
     tripManager.testOnEdit();
   }
@@ -85,3 +130,4 @@ function TEST_openEditTripSidebar(id) { tripsTest.openEditTripSidebar(id); }
 function TEST_showEditTripSidebar(id, date) { tripsTest.showEditTripSidebar(id, date); }
 function TEST_openPassengerTripList(date) { tripsTest.openPassengerTripList(date); }
 function TEST_showRestoreDatePicker() { tripsTest.showRestoreDatePicker(); }
+function TEST_backSyncLogObjectsUsesTripKeyID() { tripsTest.backSyncLogObjectsUsesTripKeyID(); }

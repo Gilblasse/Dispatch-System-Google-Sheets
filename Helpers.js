@@ -32,20 +32,25 @@ function sortTripMapByTime(map) {
 
 /**
  * Serializes a Map of trips to a JSON string. Trips are first ordered by time
- * for consistency, then converted to an array of [id, trip] pairs.
+ * for consistency, then converted to an array of [key, trip] pairs.
  * @param {Map<string, Object>} map
  * @return {string}
  */
 function serializeTripMap(map) {
   if (!(map instanceof Map)) return JSON.stringify([]);
-  const ordered = sortTripObjectsByTime(Array.from(map.values()));
-  const pairs = ordered.map(trip => [trip.id, trip]);
-  return JSON.stringify(pairs);
+  const entries = Array.from(map.entries());
+  entries.sort((a, b) => {
+    const timeA = toTimeOnlySmart(a[1].time || a[1].startTime);
+    const timeB = toTimeOnlySmart(b[1].time || b[1].startTime);
+    return timeA - timeB;
+  });
+  return JSON.stringify(entries);
 }
 
 /**
  * Deserializes a JSON string created by {@link serializeTripMap} back into a
- * Map keyed by trip ID. Falls back gracefully on legacy object/array formats.
+ * Map keyed by the first element of each pair. Falls back gracefully on legacy
+ * object/array formats.
  * @param {string} str
  * @return {Map<string, Object>}
  */
