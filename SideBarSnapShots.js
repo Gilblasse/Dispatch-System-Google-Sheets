@@ -397,14 +397,7 @@ function backSyncLegacyTripIds() {
             map = new Map();
             arr.forEach(r => {
               if (!Array.isArray(r)) return;
-              const tripKeyID = Utils.generateTripId({
-                date: r[0],
-                time: r[2],
-                passenger: r[3],
-                phone: r[6],
-                pickup: r[9],
-                dropoff: r[12]
-              });
+              const tripKeyID = Utilities.getUuid();
               r[10] = tripKeyID;
               map.set(tripKeyID, r);
             });
@@ -420,14 +413,7 @@ function backSyncLegacyTripIds() {
         const arr = Array.isArray(val) ? val.slice() : tripObjectToRowArray(val);
         let tripKeyID = key || arr[10];
         if (!tripKeyID || tripKeyID === 'null' || tripKeyID === 'undefined') {
-          tripKeyID = Utils.generateTripId({
-            date: arr[0],
-            time: arr[2],
-            passenger: arr[3],
-            phone: arr[6],
-            pickup: arr[9],
-            dropoff: arr[12]
-          });
+          tripKeyID = Utilities.getUuid();
         }
         arr[10] = tripKeyID;
         updatedMap.set(tripKeyID, arr);

@@ -27,8 +27,7 @@ const COLUMN = {
     ID: 23,           // X
     NOTES: 24,        // Y
     RETURN_OF: 30,    // AE
-    RECURRING_ID: 31, // AF
-    STANDING_ORDER: 32 // AG
+    RECURRING_ID: 31  // AF
   },
   DISPATCH: {
     TRIP_KEY_ID: 10,  // K
@@ -44,7 +43,6 @@ const COLUMN = {
     DROPOFF: 11,      // L
     VEHICLE: 12,      // M
     DRIVER: 14,       // O
-    STANDING_ORDER: 32, // AG
     RECURRING_ID: 31, // AF
     NOTES: 24,        // Y
     RETURN_OF: 30,    // AE

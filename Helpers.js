@@ -79,6 +79,10 @@ function deserializeTripMap(str) {
     });
   }
 
+  map.forEach(val => {
+    if (val && typeof val === 'object') delete val.standingOrder;
+  });
+
   return map;
 }
 
@@ -162,7 +166,7 @@ function formatToYMD(dateString) {
  * [TripIDKEY, tripArray].
  */
 function tripObjectToRowArray(trip) {
-  const row = Array(COLUMN.LOG.STANDING_ORDER + 1).fill("");
+  const row = Array(COLUMN.LOG.RECURRING_ID + 1).fill("");
   row[COLUMN.LOG.DATE] = fromDateOnly(trip.date);
   row[COLUMN.LOG.START_TIME] = toTimeOnlySmart(trip.startTime, { returnMillis: false });
   row[COLUMN.LOG.TIME] = toTimeOnlySmart(trip.time, { returnMillis: false });
@@ -183,7 +187,6 @@ function tripObjectToRowArray(trip) {
   row[COLUMN.LOG.NOTES] = trip.notes || "";
   row[COLUMN.LOG.RETURN_OF] = trip.returnOf || "";
   row[COLUMN.LOG.RECURRING_ID] = trip.recurringId || "";
-  row[COLUMN.LOG.STANDING_ORDER] = JSON.stringify(trip.standingOrder || {});
   return row;
 }
 
@@ -218,8 +221,7 @@ function convertRowToTrip(row) {
     tripKeyID: row[COLUMN.LOG.TRIP_KEY_ID],
     id: row[COLUMN.LOG.ID],
     notes: row[COLUMN.LOG.NOTES],
-    returnOf: row[COLUMN.LOG.RETURN_OF] || "",
-    standingOrder: (() => { try { return JSON.parse(row[COLUMN.LOG.STANDING_ORDER] || '{}'); } catch (e) { return {}; } })()
+    returnOf: row[COLUMN.LOG.RETURN_OF] || ""
   };
 }
 
@@ -238,7 +240,6 @@ function dispatchRowToTripObject(row) {
     dropoff: row[COLUMN.DISPATCH.DROPOFF],            // L: Drop Off
     vehicle: row[COLUMN.DISPATCH.VEHICLE],            // M: Vehicle
     driver: row[COLUMN.DISPATCH.DRIVER],             // O: DRIVER
-    standingOrder: (() => { try { return JSON.parse(row[COLUMN.DISPATCH.STANDING_ORDER] || '{}'); } catch (e) { return {}; } })(),
     recurringId: row[COLUMN.DISPATCH.RECURRING_ID] || "",  // AF: recurringId
     notes: row[COLUMN.DISPATCH.NOTES],              // Y: Notes
     returnOf: row[COLUMN.DISPATCH.RETURN_OF] || "",     // AE: returnOf (optional)

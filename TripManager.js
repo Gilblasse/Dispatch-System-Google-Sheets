@@ -10,6 +10,20 @@ class TripManager {
     return this.service.getSheet('Dispatcher', 'LOG');
   }
 
+  getStandingOrderMap() {
+    const cell = this.logSheet.getRange(1, 1);
+    const val = cell.getValue();
+    try {
+      return val ? JSON.parse(val) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  updateStandingOrderMap(map) {
+    this.logSheet.getRange(1, 1).setValue(JSON.stringify(map || {}));
+  }
+
   /**
    * Normalize time strings to ISO date anchored at 1899-12-30.
    * Accepts "HH:mm" or "HH:mm:ss" and returns
@@ -92,6 +106,15 @@ class TripManager {
     if (trip.standingOrder && trip.standingOrder.returnTime) {
       trip.standingOrder.returnTime = this.normalizeTimeString(trip.standingOrder.returnTime);
     }
+    if (!trip.tripKeyID) {
+      trip.tripKeyID = Utilities.getUuid();
+    }
+    if (trip.standingOrder && trip.tripKeyID) {
+      const soMap = this.getStandingOrderMap();
+      soMap[trip.tripKeyID] = trip.standingOrder;
+      this.updateStandingOrderMap(soMap);
+    }
+    delete trip.standingOrder;
     const sheet = this.logSheet;
     for (const k in logIndexCache) delete logIndexCache[k];
     const allData = sheet.getRange('A2:B101').getValues();
@@ -195,6 +218,15 @@ class TripManager {
     if (trip.standingOrder && trip.standingOrder.returnTime) {
       trip.standingOrder.returnTime = this.normalizeTimeString(trip.standingOrder.returnTime);
     }
+    if (!trip.tripKeyID) {
+      trip.tripKeyID = Utilities.getUuid();
+    }
+    if (trip.standingOrder && trip.tripKeyID) {
+      const soMap = this.getStandingOrderMap();
+      soMap[trip.tripKeyID] = trip.standingOrder;
+      this.updateStandingOrderMap(soMap);
+    }
+    delete trip.standingOrder;
     const normalizedDate = Utils.formatDateString(trip.date || '');
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -304,39 +336,36 @@ class TripManager {
 
   deleteStandingOrder(standingOrder) {
     if (!standingOrder) return;
+    const soMap = this.getStandingOrderMap();
     const allTrips = this.getAllTrips();
     const target = JSON.stringify(standingOrder);
     allTrips.forEach(trip => {
-      const obj = Array.isArray(trip) ? this.logManager.rowToTrip(trip) : trip;
-      const st = JSON.stringify(obj.standingOrder || {});
-      if (st === target) {
-        this.deleteTripFromLog(obj.id, obj.date);
+      const so = soMap[trip.tripKeyID] || {};
+      if (JSON.stringify(so) === target) {
+        this.deleteTripFromLog(trip.id, trip.date);
+        delete soMap[trip.tripKeyID];
       }
     });
+    this.updateStandingOrderMap(soMap);
   }
 
   deleteStandingOrderOnDates(standingOrder, dates) {
     if (!standingOrder || !Array.isArray(dates)) return;
     const normalizedDates = dates.map(d => Utils.formatDateString(d));
+    const soMap = this.getStandingOrderMap();
     const allTrips = this.getAllTrips();
     const target = JSON.stringify(standingOrder);
     allTrips.forEach(trip => {
-      const obj = Array.isArray(trip) ? this.logManager.rowToTrip(trip) : trip;
-      console.log(
-        obj,
-        JSON.stringify(obj.standingOrder || {}),
-        target,
-        Utils.formatDateString(obj.date),
-        JSON.stringify(obj.standingOrder || {}) === target &&
-          normalizedDates.includes(Utils.formatDateString(obj.date))
-      );
+      const so = soMap[trip.tripKeyID] || {};
       if (
-        JSON.stringify(obj.standingOrder || {}) === target &&
-        normalizedDates.includes(Utils.formatDateString(obj.date))
+        JSON.stringify(so) === target &&
+        normalizedDates.includes(Utils.formatDateString(trip.date))
       ) {
-        this.deleteTripFromLog(obj.id, obj.date);
+        this.deleteTripFromLog(trip.id, trip.date);
+        delete soMap[trip.tripKeyID];
       }
     });
+    this.updateStandingOrderMap(soMap);
   }
 }
 
@@ -350,3 +379,5 @@ function updateTripInLog(trip) { return tripManager.updateTripInLog(trip); }
 function deleteTripFromLog(id, date) { return tripManager.deleteTripFromLog(id, date); }
 function deleteStandingOrder(standingOrder) { return tripManager.deleteStandingOrder(standingOrder); }
 function deleteStandingOrderOnDates(standingOrder, dates) { return tripManager.deleteStandingOrderOnDates(standingOrder, dates); }
+function getStandingOrderMap() { return tripManager.getStandingOrderMap(); }
+function updateStandingOrderMap(map) { return tripManager.updateStandingOrderMap(map); }

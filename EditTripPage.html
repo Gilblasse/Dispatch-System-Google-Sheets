@@ -152,6 +152,9 @@
         document.getElementById("trip-driver").value = trip.driver || '';
         document.getElementById("trip-status").value = trip.status || '';
         document.getElementById("trip-notes").value = trip.notes || '';
+        google.script.run.withSuccessHandler(map => {
+          currentTrip.standingOrder = map[currentTrip.tripKeyID] || null;
+        }).withFailureHandler(() => {}).getStandingOrderMap();
       }
 
 
