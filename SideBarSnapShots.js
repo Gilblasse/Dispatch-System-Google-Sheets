@@ -133,12 +133,22 @@ function snapshotDispatchToLog(isAlert = false) {
 
   // Merge and write
   for (const [dateKey, dispatchMap] of Object.entries(groupedByDate)) {
-    const logMap = logDataByDate[dateKey] || new Map();
-    dispatchMap.forEach((arr, tripKeyID) => {
-      logMap.set(tripKeyID, arr);
+    const rawLogMap = logDataByDate[dateKey] || new Map();
+    const logMap = new Map();
+
+    // Ensure existing values are trip objects
+    rawLogMap.forEach((val, key) => {
+      const trip = Array.isArray(val) ? convertRowToTrip(val) : val;
+      logMap.set(key, trip);
     });
 
-    const json = JSON.stringify(Array.from(logMap.entries()));
+    // Merge current dispatch rows as trip objects
+    dispatchMap.forEach((arr, tripKeyID) => {
+      const trip = Array.isArray(arr) ? convertRowToTrip(arr) : arr;
+      logMap.set(tripKeyID, trip);
+    });
+
+    const json = serializeTripMap(logMap);
     let row = dateToRow[dateKey];
 
     try {
