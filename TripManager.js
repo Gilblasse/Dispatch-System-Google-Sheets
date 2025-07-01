@@ -10,6 +10,36 @@ class TripManager {
     return this.service.getSheet('Dispatcher', 'LOG');
   }
 
+  /**
+   * Normalize time strings to ISO date anchored at 1899-12-30.
+   * Accepts "HH:mm" or "HH:mm:ss" and returns
+   * "1899-12-30THH:MM:SSZ".
+   * If the value already looks like an ISO string, it is converted
+   * to the same anchored date.
+   * @param {string} timeStr
+   * @return {string}
+   */
+  normalizeTimeString(timeStr) {
+    if (!timeStr) return '';
+    const match = /^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(timeStr);
+    if (match) {
+      const h = match[1];
+      const m = match[2];
+      const s = match[3] || '00';
+      return `1899-12-30T${h}:${m}:${s}Z`;
+    }
+    if (timeStr.includes('T')) {
+      const d = new Date(timeStr);
+      if (!isNaN(d)) {
+        const hh = String(d.getUTCHours()).padStart(2, '0');
+        const mm = String(d.getUTCMinutes()).padStart(2, '0');
+        const ss = String(d.getUTCSeconds()).padStart(2, '0');
+        return `1899-12-30T${hh}:${mm}:${ss}Z`;
+      }
+    }
+    return timeStr;
+  }
+
 
 
 
@@ -57,6 +87,10 @@ class TripManager {
     if (Array.isArray(trip)) {
       trip.forEach(t => this.addTripToLog(t));
       return;
+    }
+    trip.time = this.normalizeTimeString(trip.time);
+    if (trip.standingOrder && trip.standingOrder.returnTime) {
+      trip.standingOrder.returnTime = this.normalizeTimeString(trip.standingOrder.returnTime);
     }
     const sheet = this.logSheet;
     for (const k in logIndexCache) delete logIndexCache[k];
@@ -157,6 +191,10 @@ class TripManager {
     const allData = sheet.getRange('A2:B101').getValues();
     const jsonCol = 2;
     if (!trip?.id) return;
+    trip.time = this.normalizeTimeString(trip.time);
+    if (trip.standingOrder && trip.standingOrder.returnTime) {
+      trip.standingOrder.returnTime = this.normalizeTimeString(trip.standingOrder.returnTime);
+    }
     const normalizedDate = Utils.formatDateString(trip.date || '');
     const today = new Date();
     today.setHours(0, 0, 0, 0);
