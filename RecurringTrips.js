@@ -23,14 +23,10 @@ class StandingOrderManager {
 
     const parentFields = parentTrip[1];
     const recurringId = parentFields[11];
-    const standingOrderJson = parentFields[32];
-    let standingOrderObj = {};
-    try {
-      standingOrderObj = JSON.parse(standingOrderJson || '{}');
-    } catch (e) {
-      standingOrderObj = {};
-    }
-    parentFields[32] = standingOrderJson;
+    const tripKeyID = parentFields[10];
+    const soMap = tripManager.getStandingOrderMap();
+    const standingOrderObj = soMap[tripKeyID] || {};
+    soMap[tripKeyID] = standingOrderObj;
 
     const lastRow = logSheet.getLastRow();
     const data = lastRow > 1 ? logSheet.getRange(2, 1, lastRow - 1, 2).getValues() : [];
@@ -73,7 +69,6 @@ class StandingOrderManager {
       newFields[0] = dateStr;
       newFields[11] = newId;
       newFields[31] = recurringId;
-      newFields[32] = standingOrderJson;
       const newTrip = convertRowToTrip(newFields);
       newTrip.id = newId;
       row.map.set(newId, newTrip);
@@ -89,7 +84,6 @@ class StandingOrderManager {
         returnFields[24] = ((returnFields[24] || '') + ' [RETURN TRIP]').trim();
         returnFields[30] = newId;
         returnFields[31] = recurringId;
-        returnFields[32] = standingOrderJson;
         const returnTrip = convertRowToTrip(returnFields);
         returnTrip.id = returnId;
         row.map.set(returnId, returnTrip);
@@ -101,6 +95,7 @@ class StandingOrderManager {
       logSheet.getRange(info.index, 1, 1, 2)
         .setValues([[key, serializeTripMap(info.map)]]);
     }
+    tripManager.updateStandingOrderMap(soMap);
   }
 
   /**

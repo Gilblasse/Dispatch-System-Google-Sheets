@@ -107,6 +107,23 @@
       }
 
 
+      function generateTripKeyID() {
+        if (crypto.randomUUID) {
+          return crypto.randomUUID();
+        }
+        const bytes = crypto.getRandomValues(new Uint8Array(16));
+        bytes[6] = (bytes[6] & 0x0f) | 0x40;
+        bytes[8] = (bytes[8] & 0x3f) | 0x80;
+        const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0'));
+        return (
+          hex.slice(0, 4).join('') + '-' +
+          hex.slice(4, 6).join('') + '-' +
+          hex.slice(6, 8).join('') + '-' +
+          hex.slice(8, 10).join('') + '-' +
+          hex.slice(10).join('')
+        );
+      }
+
       function submitNewTrip() {
         document.getElementById("loading-overlay").style.display = "flex";
 
@@ -191,10 +208,12 @@
         }
 
         const tripsToSave = [];
-        expandedDates.forEach(dateStr => {
+        for (const dateStr of expandedDates) {
+          const tripKeyID = generateTripKeyID();
           const t = {
             ...trip,
             date: dateStr,
+            tripKeyID,
             id: `${driver}|${dateStr}|${time}|${passenger}|${pickup}`
           };
           if (isStandingOrder) {
@@ -203,8 +222,10 @@
           tripsToSave.push(t);
 
           if (isReturnTrip && returnTime) {
+            const returnKey = generateTripKeyID();
             const rt = {
               ...t,
+              tripKeyID: returnKey,
               id: `${driver}|${dateStr}|${returnTime}|${passenger}|${dropoff}`,
               time: returnTime,
               pickup: dropoff,
@@ -217,7 +238,7 @@
             }
             tripsToSave.push(rt);
           }
-        });
+        }
 
         google.script.run
           .withSuccessHandler(() => {
