@@ -178,12 +178,12 @@
           const end = parseLocalDate(trip.standingOrder.endDate);
           if (end < start) {
             alert("🚫 Standing order end date cannot be before start date.");
-            overlay.style.display = "none";
+            document.getElementById("loading-overlay").style.display = "none";
             return;
           }
           if ((end - start) / 86400000 > 183) {
             alert("🚫 Standing order cannot exceed 183 days.");
-            overlay.style.display = "none";
+            document.getElementById("loading-overlay").style.display = "none";
             return;
           }
         }
