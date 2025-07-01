@@ -3,6 +3,55 @@ const dispatchSheetID = '1oc_ac8XTmjcoUjy0l_vj6m5j4YYVFuRykybSHToDAME'
 const prodUrl = "https://us-central1-agmtlambdaapi.cloudfunctions.net/trips"
 const driversDataLinkedRangeHeight = 230
 
+/**
+ * Column index mapping for LOG and DISPATCH sheets. Column letters start at A=0.
+ */
+const COLUMN = {
+  LOG: {
+    DATE: 0,          // A
+    START_TIME: 1,    // B
+    TIME: 2,          // C
+    PASSENGER: 3,     // D
+    TRANSPORT: 5,     // F
+    PHONE: 6,         // G
+    MEDICAID: 7,      // H
+    INVOICE: 8,       // I
+    PICKUP: 9,        // J
+    TRIP_KEY_ID: 10,  // K
+    IN: 11,           // L
+    DROPOFF: 12,      // M
+    OUT: 14,          // O
+    STATUS: 16,       // Q
+    VEHICLE: 17,      // R
+    DRIVER: 20,       // U
+    ID: 23,           // X
+    NOTES: 24,        // Y
+    RETURN_OF: 30,    // AE
+    RECURRING_ID: 31, // AF
+    STANDING_ORDER: 32 // AG
+  },
+  DISPATCH: {
+    TRIP_KEY_ID: 10,  // K
+    ID: 23,           // X
+    DATE: 0,          // A
+    TIME: 1,          // B
+    PASSENGER: 2,     // C
+    TRANSPORT: 4,     // E
+    PHONE: 3,         // D
+    MEDICAID: 5,      // F
+    INVOICE: 6,       // G
+    PICKUP: 9,        // J
+    DROPOFF: 11,      // L
+    VEHICLE: 12,      // M
+    DRIVER: 14,       // O
+    STANDING_ORDER: 32, // AG
+    RECURRING_ID: 31, // AF
+    NOTES: 24,        // Y
+    RETURN_OF: 30,    // AE
+    STATUS: 16        // Q
+  }
+};
+
 const dispatchSheetFormulas = {
   "L2:L100": `=IFERROR(INDEX('drivers data linked'!$A$2:$O$${driversDataLinkedRangeHeight},MATCH(X2,'drivers data linked'!$O$2:$O$${driversDataLinkedRangeHeight},0),MATCH($L$1,'drivers data linked'!$A$1:$O$1,0)),"")`,
 

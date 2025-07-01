@@ -1,6 +1,8 @@
 // ==============================================================================
 //                           HELPER FUNCTIONS FOR SIDBAR 
 // ==============================================================================
+// Column index constants are defined in AmazingGraceTransport_constant.js
+
 
 
 /**
@@ -160,36 +162,29 @@ function formatToYMD(dateString) {
  * [TripIDKEY, tripArray].
  */
 function tripObjectToRowArray(trip) {
-  return [
-    fromDateOnly(trip.date),           // A
-    toTimeOnlySmart(trip.startTime, { returnMillis: false }),   // B
-    toTimeOnlySmart(trip.time, { returnMillis: false }),        // C
-    trip.passenger || "",              // D
-    "",                                // E
-    trip.transport || "",              // F
-    trip.phone || "",                  // G
-    trip.medicaid || "",               // H
-    trip.invoice || "",                // I
-    trip.pickup || "",                 // J
-    trip.tripKeyID || "",              // K TripIDKEY
-    toTimeOnlySmart(trip.in, { returnMillis: false }),          // L
-    trip.dropoff || "",                // M
-    "",                                // N
-    toTimeOnlySmart(trip.out, { returnMillis: false }),         // O
-    "",                                // P
-    trip.status || "",                 // Q
-    trip.vehicle || "",                // R
-    "", "",                            // S, T
-    trip.driver || "",                 // U
-    "",                                // V (index 21)
-    "",                                // W (index 22)
-    trip.id || "",                     // X
-    trip.notes || "",                  // Y
-    "", "", "", "", "",                // Z - AD
-    trip.returnOf || "",               // AE (index 30)
-    trip.recurringId || "",            // AF (index 31)
-    JSON.stringify(trip.standingOrder || {}) // AG (index 32)
-  ];
+  const row = Array(COLUMN.LOG.STANDING_ORDER + 1).fill("");
+  row[COLUMN.LOG.DATE] = fromDateOnly(trip.date);
+  row[COLUMN.LOG.START_TIME] = toTimeOnlySmart(trip.startTime, { returnMillis: false });
+  row[COLUMN.LOG.TIME] = toTimeOnlySmart(trip.time, { returnMillis: false });
+  row[COLUMN.LOG.PASSENGER] = trip.passenger || "";
+  row[COLUMN.LOG.TRANSPORT] = trip.transport || "";
+  row[COLUMN.LOG.PHONE] = trip.phone || "";
+  row[COLUMN.LOG.MEDICAID] = trip.medicaid || "";
+  row[COLUMN.LOG.INVOICE] = trip.invoice || "";
+  row[COLUMN.LOG.PICKUP] = trip.pickup || "";
+  row[COLUMN.LOG.TRIP_KEY_ID] = trip.tripKeyID || "";
+  row[COLUMN.LOG.IN] = toTimeOnlySmart(trip.in, { returnMillis: false });
+  row[COLUMN.LOG.DROPOFF] = trip.dropoff || "";
+  row[COLUMN.LOG.OUT] = toTimeOnlySmart(trip.out, { returnMillis: false });
+  row[COLUMN.LOG.STATUS] = trip.status || "";
+  row[COLUMN.LOG.VEHICLE] = trip.vehicle || "";
+  row[COLUMN.LOG.DRIVER] = trip.driver || "";
+  row[COLUMN.LOG.ID] = trip.id || "";
+  row[COLUMN.LOG.NOTES] = trip.notes || "";
+  row[COLUMN.LOG.RETURN_OF] = trip.returnOf || "";
+  row[COLUMN.LOG.RECURRING_ID] = trip.recurringId || "";
+  row[COLUMN.LOG.STANDING_ORDER] = JSON.stringify(trip.standingOrder || {});
+  return row;
 }
 
 
@@ -207,47 +202,47 @@ function convertRawData(value) {
 
 function convertRowToTrip(row) {
   return {
-    date: Utils.formatDateString(row[0]),    // A
-    time: row[2],                      // C
-    passenger: row[3],                 // D
-    transport: row[5],                 // F
-    phone: row[6],                     // G
-    medicaid: row[7],                  // H
-    invoice: row[8],                   // I
-    pickup: row[9],                    // J
-    dropoff: row[12],                  // M
-    status: row[16],                   // Q
-    vehicle: row[17],                  // R
-    driver: row[20],                   // U
-    recurringId: row[31] || "",        // AF
-    tripKeyID: row[10],                // K
-    id: row[23],                       // X
-    notes: row[24],                    // Y
-    returnOf: row[30] || "",           // AE
-    standingOrder: (() => { try { return JSON.parse(row[32] || '{}'); } catch (e) { return {}; } })()
+    date: Utils.formatDateString(row[COLUMN.LOG.DATE]),
+    time: row[COLUMN.LOG.TIME],
+    passenger: row[COLUMN.LOG.PASSENGER],
+    transport: row[COLUMN.LOG.TRANSPORT],
+    phone: row[COLUMN.LOG.PHONE],
+    medicaid: row[COLUMN.LOG.MEDICAID],
+    invoice: row[COLUMN.LOG.INVOICE],
+    pickup: row[COLUMN.LOG.PICKUP],
+    dropoff: row[COLUMN.LOG.DROPOFF],
+    status: row[COLUMN.LOG.STATUS],
+    vehicle: row[COLUMN.LOG.VEHICLE],
+    driver: row[COLUMN.LOG.DRIVER],
+    recurringId: row[COLUMN.LOG.RECURRING_ID] || "",
+    tripKeyID: row[COLUMN.LOG.TRIP_KEY_ID],
+    id: row[COLUMN.LOG.ID],
+    notes: row[COLUMN.LOG.NOTES],
+    returnOf: row[COLUMN.LOG.RETURN_OF] || "",
+    standingOrder: (() => { try { return JSON.parse(row[COLUMN.LOG.STANDING_ORDER] || '{}'); } catch (e) { return {}; } })()
   };
 }
 
 function dispatchRowToTripObject(row) {
   return {
-    tripKeyID: row[10],          // K: TripIDKEY
-    id: row[23],                 // X: Unique trip ID
-    date: row[0],                // A: Date
-    time: row[1],                // B: Time
-    passenger: row[2],           // C: Passenger
-    transport: row[4],           // E: Transport
-    phone: row[3],               // D: Phone
-    medicaid: row[5],            // F: Medicaid #
-    invoice: row[6],             // G: Invoice #
-    pickup: row[9],              // J: Pick Up
-    dropoff: row[11],            // L: Drop Off
-    vehicle: row[12],            // M: Vehicle
-    driver: row[14],             // O: DRIVER
-    standingOrder: (() => { try { return JSON.parse(row[32] || '{}'); } catch (e) { return {}; } })(),
-    recurringId: row[31] || "",  // AF: recurringId
-    notes: row[24],              // Y: Notes
-    returnOf: row[30] || "",     // AE: returnOf (optional)
-    status: row[16] || "",       // Q: Status
+    tripKeyID: row[COLUMN.DISPATCH.TRIP_KEY_ID],          // K: TripIDKEY
+    id: row[COLUMN.DISPATCH.ID],                 // X: Unique trip ID
+    date: row[COLUMN.DISPATCH.DATE],                // A: Date
+    time: row[COLUMN.DISPATCH.TIME],                // B: Time
+    passenger: row[COLUMN.DISPATCH.PASSENGER],           // C: Passenger
+    transport: row[COLUMN.DISPATCH.TRANSPORT],           // E: Transport
+    phone: row[COLUMN.DISPATCH.PHONE],               // D: Phone
+    medicaid: row[COLUMN.DISPATCH.MEDICAID],            // F: Medicaid #
+    invoice: row[COLUMN.DISPATCH.INVOICE],             // G: Invoice #
+    pickup: row[COLUMN.DISPATCH.PICKUP],              // J: Pick Up
+    dropoff: row[COLUMN.DISPATCH.DROPOFF],            // L: Drop Off
+    vehicle: row[COLUMN.DISPATCH.VEHICLE],            // M: Vehicle
+    driver: row[COLUMN.DISPATCH.DRIVER],             // O: DRIVER
+    standingOrder: (() => { try { return JSON.parse(row[COLUMN.DISPATCH.STANDING_ORDER] || '{}'); } catch (e) { return {}; } })(),
+    recurringId: row[COLUMN.DISPATCH.RECURRING_ID] || "",  // AF: recurringId
+    notes: row[COLUMN.DISPATCH.NOTES],              // Y: Notes
+    returnOf: row[COLUMN.DISPATCH.RETURN_OF] || "",     // AE: returnOf (optional)
+    status: row[COLUMN.DISPATCH.STATUS] || "",       // Q: Status
 
   };
 }
