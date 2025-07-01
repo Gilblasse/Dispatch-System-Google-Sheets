@@ -247,7 +247,7 @@ function dispatchRowToTripObject(row) {
     recurringId: row[31] || "",  // AF: recurringId
     notes: row[24],              // Y: Notes
     returnOf: row[30] || "",     // AE: returnOf (optional)
-    status: row[24] || "",       // Y: Status
+    status: row[16] || "",       // Q: Status
 
   };
 }
