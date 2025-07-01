@@ -3,8 +3,9 @@
  *
  * The LOG sheet stores JSON created by `serializeTripMap`. Older data may
  * contain arrays of row values rather than trip objects. This utility scans
- * each row, converts any array entries with {@link convertRowToTrip}, and
- * rewrites the JSON using {@link serializeTripMap}.
+ * each row, converts any array entries with {@link convertRowToTrip}, ensures
+ * the map is keyed by the TripID stored in column K, and rewrites the JSON using
+ * {@link serializeTripMap}.
  *
  * Run manually if historical LOG data needs normalization.
  */
@@ -34,15 +35,21 @@ function backSyncLogObjects() {
     }
 
     let changed = false;
+    const updatedMap = new Map();
     map.forEach((val, key) => {
-      if (Array.isArray(val)) {
-        map.set(key, convertRowToTrip(val));
+      let trip = val;
+      if (Array.isArray(trip)) {
+        trip = convertRowToTrip(trip);
         changed = true;
       }
+
+      const desiredKey = String(trip.tripKeyID || key);
+      if (desiredKey !== key) changed = true;
+      updatedMap.set(desiredKey, trip);
     });
 
     if (changed) {
-      const serialized = serializeTripMap(map);
+      const serialized = serializeTripMap(updatedMap);
       sheet.getRange(i + 2, 2).setValue(serialized);
     }
   });
