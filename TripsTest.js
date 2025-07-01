@@ -96,6 +96,34 @@ class TripsTest {
     DriveApp.getFileById(ss.getId()).setTrashed(true);
   }
 
+  dispatchRowToTripObjectStatusAndNotes() {
+    const row = [];
+    row[10] = 'key1';       // TripIDKEY
+    row[23] = 'id1';        // Unique trip ID
+    row[0] = '2024-07-04';  // Date
+    row[1] = '08:00';       // Time
+    row[2] = 'P';           // Passenger
+    row[4] = 'T';           // Transport
+    row[3] = '555';         // Phone
+    row[5] = 'M';           // Medicaid
+    row[6] = 'I';           // Invoice
+    row[9] = 'A';           // Pick Up
+    row[11] = 'B';          // Drop Off
+    row[12] = 'V';          // Vehicle
+    row[14] = 'D';          // Driver
+    row[31] = '';           // recurringId
+    row[24] = 'note';       // Notes
+    row[30] = '';           // returnOf
+    row[16] = 'COMPLETE';   // Status column Q
+
+    const trip = dispatchRowToTripObject(row);
+    if (trip.status !== 'COMPLETE' || trip.notes !== 'note') {
+      throw new Error('dispatchRowToTripObject did not map status and notes correctly');
+    } else {
+      Logger.log('testDispatchRowToTripObjectStatusAndNotes passed');
+    }
+  }
+
   testOnEdit() {
     tripManager.testOnEdit();
   }
@@ -131,3 +159,4 @@ function TEST_showEditTripSidebar(id, date) { tripsTest.showEditTripSidebar(id, 
 function TEST_openPassengerTripList(date) { tripsTest.openPassengerTripList(date); }
 function TEST_showRestoreDatePicker() { tripsTest.showRestoreDatePicker(); }
 function TEST_backSyncLogObjectsUsesTripKeyID() { tripsTest.backSyncLogObjectsUsesTripKeyID(); }
+function TEST_dispatchRowToTripObjectStatusAndNotes() { tripsTest.dispatchRowToTripObjectStatusAndNotes(); }
