@@ -109,10 +109,13 @@ class TripManager {
     if (!trip.tripKeyID) {
       trip.tripKeyID = Utilities.getUuid();
     }
-    if (trip.standingOrder && trip.tripKeyID) {
-      const soMap = this.getStandingOrderMap();
-      soMap[trip.tripKeyID] = trip.standingOrder;
-      this.updateStandingOrderMap(soMap);
+    if (trip.standingOrder) {
+      const soKey = trip.recurringId || trip.tripKeyID;
+      if (soKey) {
+        const soMap = this.getStandingOrderMap();
+        soMap[soKey] = trip.standingOrder;
+        this.updateStandingOrderMap(soMap);
+      }
     }
     delete trip.standingOrder;
     const sheet = this.logSheet;
@@ -221,10 +224,13 @@ class TripManager {
     if (!trip.tripKeyID) {
       trip.tripKeyID = Utilities.getUuid();
     }
-    if (trip.standingOrder && trip.tripKeyID) {
-      const soMap = this.getStandingOrderMap();
-      soMap[trip.tripKeyID] = trip.standingOrder;
-      this.updateStandingOrderMap(soMap);
+    if (trip.standingOrder) {
+      const soKey = trip.recurringId || trip.tripKeyID;
+      if (soKey) {
+        const soMap = this.getStandingOrderMap();
+        soMap[soKey] = trip.standingOrder;
+        this.updateStandingOrderMap(soMap);
+      }
     }
     delete trip.standingOrder;
     const normalizedDate = Utils.formatDateString(trip.date || '');
