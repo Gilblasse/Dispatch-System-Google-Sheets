@@ -23,7 +23,6 @@ class StandingOrderManager {
 
     const parentFields = parentTrip[1];
     const recurringId = parentFields[31];
-    const tripKeyID = parentFields[10];
     const soMap = tripManager.getStandingOrderMap();
     const standingOrderObj = soMap[recurringId] || {};
     soMap[recurringId] = standingOrderObj;
@@ -66,17 +65,22 @@ class StandingOrderManager {
       const row = getRowInfo(dateStr);
       const newFields = parentFields.slice();
       const newId = Utilities.getUuid();
+      const newTripKeyID = Utilities.getUuid();
       newFields[0] = dateStr;
+      newFields[10] = newTripKeyID;
       newFields[23] = newId;
       newFields[31] = recurringId;
       const newTrip = convertRowToTrip(newFields);
       newTrip.id = newId;
-      row.map.set(newId, newTrip);
+      newTrip.tripKeyID = newTripKeyID;
+      row.map.set(newTripKeyID, newTrip);
 
       if (standingOrderObj.withReturnTrip && standingOrderObj.returnTime) {
         const returnFields = parentFields.slice();
         const returnId = Utilities.getUuid();
+        const returnTripKeyID = Utilities.getUuid();
         returnFields[0] = dateStr;
+        returnFields[10] = returnTripKeyID;
         returnFields[23] = returnId;
         returnFields[2] = standingOrderObj.returnTime;
         returnFields[9] = parentFields[12];
@@ -86,7 +90,8 @@ class StandingOrderManager {
         returnFields[31] = recurringId;
         const returnTrip = convertRowToTrip(returnFields);
         returnTrip.id = returnId;
-        row.map.set(returnId, returnTrip);
+        returnTrip.tripKeyID = returnTripKeyID;
+        row.map.set(returnTripKeyID, returnTrip);
       }
     });
 
