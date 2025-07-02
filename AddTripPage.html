@@ -208,13 +208,16 @@
         }
 
         const tripsToSave = [];
+        let parentTripKeyID = null;
         for (const dateStr of expandedDates) {
           const tripKeyID = generateTripKeyID();
+          if (!parentTripKeyID) parentTripKeyID = tripKeyID;
           const t = {
             ...trip,
             date: dateStr,
             tripKeyID,
-            id: `${driver}|${dateStr}|${time}|${passenger}|${pickup}`
+            id: `${driver}|${dateStr}|${time}|${passenger}|${pickup}`,
+            recurringId: parentTripKeyID
           };
           if (isStandingOrder) {
             t.standingOrder = { ...trip.standingOrder };
@@ -231,7 +234,8 @@
               pickup: dropoff,
               dropoff: pickup,
               notes: (t.notes || "") + " [RETURN TRIP]",
-              returnOf: t.id
+              returnOf: t.id,
+              recurringId: parentTripKeyID
             };
             if (isStandingOrder) {
               rt.standingOrder = { ...trip.standingOrder };
