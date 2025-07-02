@@ -22,11 +22,11 @@ class StandingOrderManager {
     if (!logSheet) return;
 
     const parentFields = parentTrip[1];
-    const recurringId = parentFields[11];
+    const recurringId = parentFields[31];
     const tripKeyID = parentFields[10];
     const soMap = tripManager.getStandingOrderMap();
-    const standingOrderObj = soMap[tripKeyID] || {};
-    soMap[tripKeyID] = standingOrderObj;
+    const standingOrderObj = soMap[recurringId] || {};
+    soMap[recurringId] = standingOrderObj;
 
     const lastRow = logSheet.getLastRow();
     const data = lastRow > 1 ? logSheet.getRange(2, 1, lastRow - 1, 2).getValues() : [];
@@ -67,7 +67,7 @@ class StandingOrderManager {
       const newFields = parentFields.slice();
       const newId = Utilities.getUuid();
       newFields[0] = dateStr;
-      newFields[11] = newId;
+      newFields[23] = newId;
       newFields[31] = recurringId;
       const newTrip = convertRowToTrip(newFields);
       newTrip.id = newId;
@@ -77,7 +77,7 @@ class StandingOrderManager {
         const returnFields = parentFields.slice();
         const returnId = Utilities.getUuid();
         returnFields[0] = dateStr;
-        returnFields[11] = returnId;
+        returnFields[23] = returnId;
         returnFields[2] = standingOrderObj.returnTime;
         returnFields[9] = parentFields[12];
         returnFields[12] = parentFields[9];
