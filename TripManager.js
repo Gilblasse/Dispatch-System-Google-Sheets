@@ -79,7 +79,7 @@ class TripManager {
         const row = range.getRow();
         if (row < 2 || !watchedCols.includes(col)) continue;
         const rowData = sheet.getRange(row, 1, 1, sheet.getLastColumn()).getValues()[0];
-        const id = rowData[23];
+        const id = rowData[COLUMN.DISPATCH.ID];
         if (!id) {
           Logger.log('⛔ Trip ID not found on row ' + row);
           continue;

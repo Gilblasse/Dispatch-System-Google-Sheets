@@ -10,7 +10,7 @@ function validateTripIndexAgainstLog() {
       const json = logSheet.getRange(rowNum, 2).getValue();
       const trips = JSON.parse(json || "[]");
 
-      const match = trips.find(t => (Array.isArray(t) ? t[23] : t.id) === tripId);
+      const match = trips.find(t => (Array.isArray(t) ? t[COLUMN.DISPATCH.ID] : t.id) === tripId);
       if (!match) {
         Logger.log(`❌ ID ${tripId} not found in LOG row ${rowNum}`);
       }
@@ -105,9 +105,9 @@ function snapshotDispatchToLog(isAlert = false) {
   today.setHours(0, 0, 0, 0);
 
   for (const row of data) {
-    const rawDate = row[0];
-    const time = row[2] || "23:58";
-    const passenger = row[3];
+    const rawDate = row[COLUMN.DISPATCH.DATE];
+    const time = row[COLUMN.DISPATCH.TIME] || "23:58";
+    const passenger = row[COLUMN.DISPATCH.PASSENGER];
     if (!passenger) continue;
 
     const isBlank = rawDate === '' || rawDate == null;
@@ -121,11 +121,11 @@ function snapshotDispatchToLog(isAlert = false) {
       dateKey = Utilities.formatDate(dateObj, Session.getScriptTimeZone(), 'yyyy-MM-dd');
     }
 
-    const tripKeyID = row[10];
+    const tripKeyID = row[COLUMN.DISPATCH.TRIP_KEY_ID];
     const trip = [...row];
-    trip[0] = dateKey || ''; // Keep date format consistent
-    trip[2] = time;
-    trip[10] = tripKeyID;
+    trip[COLUMN.DISPATCH.DATE] = dateKey || ''; // Keep date format consistent
+    trip[COLUMN.DISPATCH.TIME] = time;
+    trip[COLUMN.DISPATCH.TRIP_KEY_ID] = tripKeyID;
 
     if (!groupedByDate[dateKey]) groupedByDate[dateKey] = new Map();
     if (tripKeyID) groupedByDate[dateKey].set(tripKeyID, trip);
@@ -214,7 +214,7 @@ function restoreDispatchFromLog(date) {
     const data = deserializeTripMap(json);
     parsed = Array.from(data.entries()).map(([tripKeyID, v]) => {
       const row = Array.isArray(v) ? v : tripObjectToRowArray(v);
-      row[10] = tripKeyID;
+      row[COLUMN.DISPATCH.TRIP_KEY_ID] = tripKeyID;
       return row;
     });
   } catch (e) {
@@ -234,10 +234,10 @@ function restoreDispatchFromLog(date) {
     row[0] = new Date(year, month - 1, day); // Local midnight (correct)
 
     // Clean times
-    row[1] = toCleanTime(row[1]); // Start Time
-    row[2] = toCleanTime(row[2]); // Time
-    row[11] = toCleanTime(row[11]); // IN
-    row[14] = toCleanTime(row[14]); // OUT
+    row[COLUMN.LOG.START_TIME] = toCleanTime(row[COLUMN.LOG.START_TIME]); // Start Time
+    row[COLUMN.LOG.TIME] = toCleanTime(row[COLUMN.LOG.TIME]); // Time
+    row[COLUMN.LOG.IN] = toCleanTime(row[COLUMN.LOG.IN]); // IN
+    row[COLUMN.LOG.OUT] = toCleanTime(row[COLUMN.LOG.OUT]); // OUT
 
     return row;
   });
@@ -398,7 +398,7 @@ function backSyncLegacyTripIds() {
             arr.forEach(r => {
               if (!Array.isArray(r)) return;
               const tripKeyID = Utilities.getUuid();
-              r[10] = tripKeyID;
+              r[COLUMN.DISPATCH.TRIP_KEY_ID] = tripKeyID;
               map.set(tripKeyID, r);
             });
           }
@@ -411,11 +411,11 @@ function backSyncLegacyTripIds() {
       const updatedMap = new Map();
       map.forEach((val, key) => {
         const arr = Array.isArray(val) ? val.slice() : tripObjectToRowArray(val);
-        let tripKeyID = key || arr[10];
+        let tripKeyID = key || arr[COLUMN.DISPATCH.TRIP_KEY_ID];
         if (!tripKeyID || tripKeyID === 'null' || tripKeyID === 'undefined') {
           tripKeyID = Utilities.getUuid();
         }
-        arr[10] = tripKeyID;
+        arr[COLUMN.DISPATCH.TRIP_KEY_ID] = tripKeyID;
         updatedMap.set(tripKeyID, arr);
       });
 

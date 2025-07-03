@@ -98,23 +98,23 @@ class TripsTest {
 
   dispatchRowToTripObjectStatusAndNotes() {
     const row = [];
-    row[10] = 'key1';       // TripIDKEY
-    row[23] = 'id1';        // Unique trip ID
-    row[0] = '2024-07-04';  // Date
-    row[1] = '08:00';       // Time
-    row[2] = 'P';           // Passenger
-    row[4] = 'T';           // Transport
-    row[3] = '555';         // Phone
-    row[5] = 'M';           // Medicaid
-    row[6] = 'I';           // Invoice
-    row[9] = 'A';           // Pick Up
-    row[11] = 'B';          // Drop Off
-    row[12] = 'V';          // Vehicle
-    row[14] = 'D';          // Driver
-    row[31] = '';           // recurringId
-    row[24] = 'note';       // Notes
-    row[30] = '';           // returnOf
-    row[16] = 'COMPLETE';   // Status column Q
+    row[COLUMN.DISPATCH.TRIP_KEY_ID] = 'key1';       // TripIDKEY
+    row[COLUMN.DISPATCH.ID] = 'id1';                 // Unique trip ID
+    row[COLUMN.DISPATCH.DATE] = '2024-07-04';        // Date
+    row[COLUMN.DISPATCH.TIME] = '08:00';             // Time
+    row[COLUMN.DISPATCH.PASSENGER] = 'P';            // Passenger
+    row[COLUMN.DISPATCH.TRANSPORT] = 'T';            // Transport
+    row[COLUMN.DISPATCH.PHONE] = '555';              // Phone
+    row[COLUMN.DISPATCH.MEDICAID] = 'M';             // Medicaid
+    row[COLUMN.DISPATCH.INVOICE] = 'I';              // Invoice
+    row[COLUMN.DISPATCH.PICKUP] = 'A';               // Pick Up
+    row[COLUMN.DISPATCH.DROPOFF] = 'B';              // Drop Off
+    row[COLUMN.DISPATCH.VEHICLE] = 'V';              // Vehicle
+    row[COLUMN.DISPATCH.DRIVER] = 'D';               // Driver
+    row[COLUMN.DISPATCH.RECURRING_ID] = '';          // recurringId
+    row[COLUMN.DISPATCH.NOTES] = 'note';             // Notes
+    row[COLUMN.DISPATCH.RETURN_OF] = '';             // returnOf
+    row[COLUMN.DISPATCH.STATUS] = 'COMPLETE';        // Status column Q
 
     const trip = dispatchRowToTripObject(row);
     if (trip.status !== 'COMPLETE' || trip.notes !== 'note') {

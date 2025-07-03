@@ -70,7 +70,7 @@ function checkDispatchForUpdates(e) {
 
   const rowData = sheet.getRange(row, 1, 1, 25).getValues()[0]; // A:Y
   const [dateCell, , timeRaw, passenger, dispatchStatus, , , , , , , , , , , , , , , , driverName] = rowData;
-  const colY = rowData[24];
+  const colY = rowData[COLUMN.DISPATCH.NOTES];
   const alertCol = 26; // Column Z
 
   if (!dateCell || !driverName || !timeRaw) return;
