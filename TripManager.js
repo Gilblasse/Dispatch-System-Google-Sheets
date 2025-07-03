@@ -201,6 +201,24 @@ class TripManager {
     });
   }
 
+  /**
+   * Determine if the given trip conflicts with another trip for the same
+   * driver at the same time on the same day.
+   * @param {Object} trip Trip object to compare
+   * @return {boolean} True if a conflict exists
+   */
+  hasDriverConflict(trip) {
+    if (!trip || !trip.date || !trip.driver) return false;
+    const dateKey = Utils.formatDateString(trip.date);
+    const timeKey = this.normalizeTimeString(trip.time);
+    const driver = trip.driver || '';
+    const trips = this.getTripsByDate(dateKey);
+    return trips.some(t => {
+      const tTime = this.normalizeTimeString(t.time);
+      return tTime === timeKey && (t.driver || '') === driver;
+    });
+  }
+
   getAllTrips() {
     const sheet = this.logSheet;
     const data = sheet.getRange('A2:B').getValues();
@@ -419,3 +437,4 @@ function deleteStandingOrderOnDates(recurringId, dates) { return tripManager.del
 function getStandingOrderMap() { return tripManager.getStandingOrderMap(); }
 function updateStandingOrderMap(map) { return tripManager.updateStandingOrderMap(map); }
 function checkDuplicateTrip(trip) { return tripManager.isDuplicateTrip(trip); }
+function checkDriverConflict(trip) { return tripManager.hasDriverConflict(trip); }
