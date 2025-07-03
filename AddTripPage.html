@@ -317,23 +317,45 @@
               return;
             }
 
-            const conflictChecks = tripsToSave.map(t =>
+            const passengerChecks = tripsToSave.map(t =>
               new Promise((resolve, reject) => {
                 google.script.run
                   .withSuccessHandler(res => resolve(res))
                   .withFailureHandler(err => reject(err))
-                  .checkDriverConflict(t);
+                  .checkPassengerConflict(t);
               })
             );
 
-            Promise.all(conflictChecks)
-              .then(cResults => {
-                if (cResults.some(r => r)) {
-                  alert("🚫 Driver has a conflicting trip at that time.");
+            Promise.all(passengerChecks)
+              .then(pResults => {
+                if (pResults.some(r => r)) {
+                  alert("🚫 Passenger has a conflicting trip at that time.");
                   document.getElementById("loading-overlay").style.display = "none";
                   return;
                 }
-                saveTrips();
+
+                const conflictChecks = tripsToSave.map(t =>
+                  new Promise((resolve, reject) => {
+                    google.script.run
+                      .withSuccessHandler(res => resolve(res))
+                      .withFailureHandler(err => reject(err))
+                      .checkDriverConflict(t);
+                  })
+                );
+
+                Promise.all(conflictChecks)
+                  .then(cResults => {
+                    if (cResults.some(r => r)) {
+                      alert("🚫 Driver has a conflicting trip at that time.");
+                      document.getElementById("loading-overlay").style.display = "none";
+                      return;
+                    }
+                    saveTrips();
+                  })
+                  .catch(err => {
+                    document.getElementById("loading-overlay").style.display = "none";
+                    handleError(err);
+                  });
               })
               .catch(err => {
                 document.getElementById("loading-overlay").style.display = "none";
