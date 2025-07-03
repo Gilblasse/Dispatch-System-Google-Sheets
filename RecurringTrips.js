@@ -22,7 +22,7 @@ class StandingOrderManager {
     if (!logSheet) return;
 
     const parentFields = parentTrip[1];
-    const recurringId = parentFields[31];
+    const recurringId = parentFields[COLUMN.LOG.RECURRING_ID];
     const soMap = tripManager.getStandingOrderMap();
     const standingOrderObj = soMap[recurringId] || {};
     soMap[recurringId] = standingOrderObj;
@@ -31,7 +31,7 @@ class StandingOrderManager {
     const data = lastRow > 1 ? logSheet.getRange(2, 1, lastRow - 1, 2).getValues() : [];
     const dateToRow = {};
     for (let i = 0; i < data.length; i++) {
-      const d = data[i][0];
+      const d = data[i][COLUMN.LOG.DATE];
       const key = d ? Utilities.formatDate(new Date(d), Session.getScriptTimeZone(), 'yyyy-MM-dd') : '';
       if (!dateToRow[key]) {
         dateToRow[key] = i + 2; // 1-based row index
@@ -66,10 +66,10 @@ class StandingOrderManager {
       const newFields = parentFields.slice();
       const newId = Utilities.getUuid();
       const newTripKeyID = Utilities.getUuid();
-      newFields[0] = dateStr;
-      newFields[10] = newTripKeyID;
-      newFields[23] = newId;
-      newFields[31] = recurringId;
+      newFields[COLUMN.LOG.DATE] = dateStr;
+      newFields[COLUMN.LOG.TRIP_KEY_ID] = newTripKeyID;
+      newFields[COLUMN.LOG.ID] = newId;
+      newFields[COLUMN.LOG.RECURRING_ID] = recurringId;
       const newTrip = convertRowToTrip(newFields);
       newTrip.id = newId;
       newTrip.tripKeyID = newTripKeyID;
@@ -79,15 +79,15 @@ class StandingOrderManager {
         const returnFields = parentFields.slice();
         const returnId = Utilities.getUuid();
         const returnTripKeyID = Utilities.getUuid();
-        returnFields[0] = dateStr;
-        returnFields[10] = returnTripKeyID;
-        returnFields[23] = returnId;
-        returnFields[2] = standingOrderObj.returnTime;
-        returnFields[9] = parentFields[12];
-        returnFields[12] = parentFields[9];
-        returnFields[24] = ((returnFields[24] || '') + ' [RETURN TRIP]').trim();
-        returnFields[30] = newId;
-        returnFields[31] = recurringId;
+        returnFields[COLUMN.LOG.DATE] = dateStr;
+        returnFields[COLUMN.LOG.TRIP_KEY_ID] = returnTripKeyID;
+        returnFields[COLUMN.LOG.ID] = returnId;
+        returnFields[COLUMN.LOG.TIME] = standingOrderObj.returnTime;
+        returnFields[COLUMN.LOG.PICKUP] = parentFields[COLUMN.LOG.DROPOFF];
+        returnFields[COLUMN.LOG.DROPOFF] = parentFields[COLUMN.LOG.PICKUP];
+        returnFields[COLUMN.LOG.NOTES] = ((returnFields[COLUMN.LOG.NOTES] || '') + ' [RETURN TRIP]').trim();
+        returnFields[COLUMN.LOG.RETURN_OF] = newId;
+        returnFields[COLUMN.LOG.RECURRING_ID] = recurringId;
         const returnTrip = convertRowToTrip(returnFields);
         returnTrip.id = returnId;
         returnTrip.tripKeyID = returnTripKeyID;
@@ -105,7 +105,7 @@ class StandingOrderManager {
 
   /**
    * Delete recurring trip instances from specific dates.
-   * @param {string} recurringId Parent tripId stored in fields[31]
+   * @param {string} recurringId Parent tripId stored in fields[COLUMN.LOG.RECURRING_ID]
    * @param {string[]} datesToDelete Dates to remove (yyyy-MM-dd)
    */
   deleteFromDates(recurringId, datesToDelete) {
@@ -118,7 +118,7 @@ class StandingOrderManager {
     const data = lastRow > 1 ? logSheet.getRange(2, 1, lastRow - 1, 2).getValues() : [];
     const dateToRow = {};
     for (let i = 0; i < data.length; i++) {
-      const d = data[i][0];
+      const d = data[i][COLUMN.LOG.DATE];
       const key = d ? Utilities.formatDate(new Date(d), Session.getScriptTimeZone(), 'yyyy-MM-dd') : '';
       if (!dateToRow[key]) {
         dateToRow[key] = i + 2;
