@@ -127,8 +127,9 @@
       function submitNewTrip() {
         document.getElementById("loading-overlay").style.display = "flex";
 
-        const date = document.getElementById("trip-date").value;
-        const passenger = document.getElementById("trip-passenger").value;
+        const date = document.getElementById("trip-date").value.trim();
+        let passenger = document.getElementById("trip-passenger").value.trim();
+        passenger = passenger.replace(/\|/g, "");
 
         if (!date || !passenger) {
           alert("🚫 Date and Passenger are required.");
@@ -143,26 +144,28 @@
           return;
         }
 
-        const time = document.getElementById("trip-time").value || "23:58";
-        const pickup = document.getElementById("trip-pickup").value || "";
-        const dropoff = document.getElementById("trip-dropoff").value || "";
-        const driver = document.getElementById("trip-driver").value || "";
+        const time = (document.getElementById("trip-time").value || "23:58").trim();
+        let pickup = (document.getElementById("trip-pickup").value || "").trim();
+        pickup = pickup.replace(/\|/g, "");
+        let dropoff = (document.getElementById("trip-dropoff").value || "").trim();
+        dropoff = dropoff.replace(/\|/g, "");
+        const driver = (document.getElementById("trip-driver").value || "").trim();
 
         const trip = {
           id: `${driver}|${date}|${time}|${passenger}|${pickup}`,
           date,
           time,
           passenger,
-          phone: document.getElementById("trip-phone").value || "",
-          medicaid: document.getElementById("trip-medicaid").value || "",
-          invoice: document.getElementById("trip-invoice").value || "",
-          transport: document.getElementById("trip-transport").value || "",
+          phone: (document.getElementById("trip-phone").value || "").trim(),
+          medicaid: (document.getElementById("trip-medicaid").value || "").trim(),
+          invoice: (document.getElementById("trip-invoice").value || "").trim(),
+          transport: (document.getElementById("trip-transport").value || "").trim(),
           pickup,
           dropoff,
-          vehicle: document.getElementById("trip-vehicle").value || "",
+          vehicle: (document.getElementById("trip-vehicle").value || "").trim(),
           driver,
-          status: document.getElementById("trip-status").value || "",
-          notes: document.getElementById("trip-notes").value || ""
+          status: (document.getElementById("trip-status").value || "").trim(),
+          notes: (document.getElementById("trip-notes").value || "").trim()
         };
 
         const isStandingOrder = document.getElementById("standing-order-checkbox")?.checked;
@@ -171,9 +174,9 @@
         // them upfront for access later when expanding the date pattern
         let frequency, startDate, endDate, selectedDays;
         if (isStandingOrder) {
-          frequency = document.getElementById("standing-frequency").value;
-          startDate = document.getElementById("standing-start-date").value;
-          endDate = document.getElementById("standing-end-date").value;
+          frequency = document.getElementById("standing-frequency").value.trim();
+          startDate = document.getElementById("standing-start-date").value.trim();
+          endDate = document.getElementById("standing-end-date").value.trim();
           selectedDays = Array.from(
             document.querySelectorAll("#custom-days input:checked")
           ).map(cb => cb.value);
@@ -193,7 +196,7 @@
         }
 
         const isReturnTrip = document.getElementById("return-trip-checkbox")?.checked;
-        const returnTime = document.getElementById("return-trip-time")?.value;
+        const returnTime = document.getElementById("return-trip-time")?.value?.trim();
 
         // ✅ If return trip is checked but no time is provided
         if (isReturnTrip && !returnTime) {
