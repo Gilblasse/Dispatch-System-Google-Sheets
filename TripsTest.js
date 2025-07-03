@@ -9,11 +9,13 @@ class TripsTest {
     const manager = new TripManager(service, logManager);
 
     const standingOrder = {
-      frequency: 'DAILY',
-      startDate: '2024-06-01',
-      endDate: '2024-06-05',
-      days: ['MO', 'TU', 'WE', 'TH', 'FR'],
-      pattern: encodeDatePattern('2024-06-01', '2024-06-05', ['MO', 'TU', 'WE', 'TH', 'FR'])
+      pattern: encodeDatePattern(
+        '2024-06-01',
+        '2024-06-05',
+        ['MO', 'TU', 'WE', 'TH', 'FR']
+      ),
+      withReturnTrip: true,
+      returnTime: '1899-12-30T14:40:00Z'
     };
 
     const soMap = {};
