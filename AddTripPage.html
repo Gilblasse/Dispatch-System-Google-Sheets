@@ -202,6 +202,17 @@
           return;
         }
 
+        // ✅ Ensure return trip time is later than the main trip time
+        if (isReturnTrip && returnTime) {
+          const [th, tm] = time.split(":").map(Number);
+          const [rh, rm] = returnTime.split(":").map(Number);
+          if (rh < th || (rh === th && rm <= tm)) {
+            alert("🚫 Return time must be later than the trip time.");
+            document.getElementById("loading-overlay").style.display = "none";
+            return;
+          }
+        }
+
         let expandedDates = [date];
         if (isStandingOrder) {
           const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
