@@ -65,3 +65,53 @@ function generateTripIDs_K2toK100() {
 
   Logger.log("TripIDKEYs generated in K2:K100 where needed.");
 }
+
+/**
+ * Encode recurring trip information into a compact pattern string.
+ * @param {string} startDate ISO formatted start date (yyyy-MM-dd)
+ * @param {string} endDate ISO formatted end date (yyyy-MM-dd)
+ * @param {string[]} daysOfWeek Array of weekday abbreviations e.g. ['MON','WED']
+ * @return {string} Encoded pattern string
+ */
+function encodeDatePattern(startDate, endDate, daysOfWeek) {
+  const days = Array.isArray(daysOfWeek)
+    ? daysOfWeek.map(d => d.toUpperCase()).join(',')
+    : '';
+  return [startDate, endDate, days].join('|');
+}
+
+/**
+ * Decode a pattern string back into an array of matching date strings.
+ * @param {string} patternStr Encoded pattern string
+ * @return {string[]} Array of ISO formatted date strings
+ */
+function decodeDatePattern(patternStr) {
+  if (!patternStr) return [];
+  const [startStr, endStr, daysStr] = patternStr.split('|');
+  if (!startStr || !endStr || !daysStr) return [];
+
+  const dayMap = {
+    SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6,
+  };
+  const dayNums = daysStr
+    .split(',')
+    .map(d => dayMap[d.trim().toUpperCase()])
+    .filter(d => d !== undefined);
+  if (dayNums.length === 0) return [];
+
+  const [sy, sm, sd] = startStr.split('-').map(Number);
+  const [ey, em, ed] = endStr.split('-').map(Number);
+  const start = new Date(sy, sm - 1, sd);
+  const end = new Date(ey, em - 1, ed);
+
+  const dates = [];
+  const current = new Date(start);
+  while (current <= end) {
+    if (dayNums.includes(current.getDay())) {
+      const iso = Utilities.formatDate(current, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+      dates.push(iso);
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  return dates;
+}
