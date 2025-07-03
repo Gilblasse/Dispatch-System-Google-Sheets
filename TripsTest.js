@@ -12,8 +12,14 @@ class TripsTest {
       frequency: 'DAILY',
       startDate: '2024-06-01',
       endDate: '2024-06-05',
-      days: ['MO', 'TU', 'WE', 'TH', 'FR']
+      days: ['MO', 'TU', 'WE', 'TH', 'FR'],
+      pattern: encodeDatePattern('2024-06-01', '2024-06-05', ['MO', 'TU', 'WE', 'TH', 'FR'])
     };
+
+    const soMap = {};
+    const soKey = 'so1';
+    soMap[soKey] = standingOrder;
+    manager.updateStandingOrderMap(soMap);
 
     const baseTrip = {
       date: '2024-06-01',
@@ -30,8 +36,7 @@ class TripsTest {
       driver: '',
       notes: 'This is a TEST !!!',
       returnOf: 'orig',
-      recurringId: '',
-      standingOrder
+      recurringId: soKey
     };
     const trip1 = Object.assign({ id: 't1', date: '2024-06-01' }, baseTrip);
     const trip2 = Object.assign({ id: 't2', date: '2024-06-02' }, baseTrip);
