@@ -167,11 +167,14 @@
 
         const isStandingOrder = document.getElementById("standing-order-checkbox")?.checked;
         let standingOrder = null;
+        // These are needed outside the initial standing-order block so declare
+        // them upfront for access later when expanding the date pattern
+        let frequency, startDate, endDate, selectedDays;
         if (isStandingOrder) {
-          const frequency = document.getElementById("standing-frequency").value;
-          const startDate = document.getElementById("standing-start-date").value;
-          const endDate = document.getElementById("standing-end-date").value;
-          const selectedDays = Array.from(
+          frequency = document.getElementById("standing-frequency").value;
+          startDate = document.getElementById("standing-start-date").value;
+          endDate = document.getElementById("standing-end-date").value;
+          selectedDays = Array.from(
             document.querySelectorAll("#custom-days input:checked")
           ).map(cb => cb.value);
 
