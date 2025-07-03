@@ -153,7 +153,7 @@
         document.getElementById("trip-status").value = trip.status || '';
         document.getElementById("trip-notes").value = trip.notes || '';
         google.script.run.withSuccessHandler(map => {
-          currentTrip.standingOrder = map[currentTrip.tripKeyID] || null;
+          map[currentTrip.recurringId];
         }).withFailureHandler(() => {}).getStandingOrderMap();
       }
 
@@ -227,18 +227,20 @@
       function openDeleteModal() {
         const container = document.getElementById("standing-dates");
         container.innerHTML = "";
-        const dates = expandStandingOrder(currentTrip);
-        dates.forEach(d => {
-          const label = document.createElement("label");
-          const cb = document.createElement("input");
-          cb.type = "checkbox";
-          cb.value = d;
-          cb.checked = true;
-          label.appendChild(cb);
-          label.append(" " + d);
-          container.appendChild(label);
-        });
-        document.getElementById("delete-modal").classList.remove("hidden");
+        google.script.run.withSuccessHandler(map => {
+          const dates = expandStandingOrder(currentTrip.recurringId, map);
+          dates.forEach(d => {
+            const label = document.createElement("label");
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.value = d;
+            cb.checked = true;
+            label.appendChild(cb);
+            label.append(" " + d);
+            container.appendChild(label);
+          });
+          document.getElementById("delete-modal").classList.remove("hidden");
+        }).getStandingOrderMap();
       }
 
       function closeDeleteModal() {
