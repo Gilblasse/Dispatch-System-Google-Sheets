@@ -185,13 +185,12 @@
     return dates;
   }
 
-  function expandStandingOrder(trip) {
-    if (!trip || !trip.standingOrder) return trip && trip.date ? [trip.date] : [];
-
-    if (trip.standingOrder.pattern) {
-      return decodeDatePattern(trip.standingOrder.pattern);
+  function expandStandingOrder(recurringId, map) {
+    if (!recurringId || !map) return [];
+    const standingOrder = map[recurringId];
+    if (standingOrder && standingOrder.pattern) {
+      return decodeDatePattern(standingOrder.pattern);
     }
-
-    return trip.date ? [trip.date] : [];
+    return [];
   }
 </script>
