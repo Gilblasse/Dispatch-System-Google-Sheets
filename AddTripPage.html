@@ -168,15 +168,15 @@
         const isStandingOrder = document.getElementById("standing-order-checkbox")?.checked;
         let standingOrder = null;
         if (isStandingOrder) {
-          standingOrder = {
-            frequency: document.getElementById("standing-frequency").value,
-            startDate: document.getElementById("standing-start-date").value,
-            endDate: document.getElementById("standing-end-date").value,
-            days: Array.from(document.querySelectorAll("#custom-days input:checked"))
-              .map(cb => cb.value)
-          };
-          const start = parseLocalDate(standingOrder.startDate);
-          const end = parseLocalDate(standingOrder.endDate);
+          const frequency = document.getElementById("standing-frequency").value;
+          const startDate = document.getElementById("standing-start-date").value;
+          const endDate = document.getElementById("standing-end-date").value;
+          const selectedDays = Array.from(
+            document.querySelectorAll("#custom-days input:checked")
+          ).map(cb => cb.value);
+
+          const start = parseLocalDate(startDate);
+          const end = parseLocalDate(endDate);
           if (end < start) {
             alert("🚫 Standing order end date cannot be before start date.");
             document.getElementById("loading-overlay").style.display = "none";
@@ -202,8 +202,8 @@
         let expandedDates = [date];
         if (isStandingOrder) {
           const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-          const freq = standingOrder.frequency;
-          const startDay = dayNames[parseLocalDate(standingOrder.startDate).getDay()];
+          const freq = frequency;
+          const startDay = dayNames[parseLocalDate(startDate).getDay()];
           let daysForPattern = [];
           switch (freq) {
             case "DAILY":
@@ -216,17 +216,16 @@
               daysForPattern = [dayNames[0], dayNames[6]];
               break;
             default:
-              daysForPattern = standingOrder.days.length
-                ? standingOrder.days
+              daysForPattern = selectedDays.length
+                ? selectedDays
                 : [startDay];
           }
           const pattern = encodeDatePattern(
-            standingOrder.startDate,
-            standingOrder.endDate,
+            startDate,
+            endDate,
             daysForPattern
           );
           standingOrder = {
-            ...standingOrder,
             pattern,
             withReturnTrip: isReturnTrip,
             ...(isReturnTrip && returnTime ? { returnTime } : {})
