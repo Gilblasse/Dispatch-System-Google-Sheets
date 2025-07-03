@@ -122,8 +122,8 @@ class TripManager {
     for (const k in logIndexCache) delete logIndexCache[k];
     const allData = sheet.getRange('A2:B101').getValues();
     const jsonCol = 2;
-    if (!trip?.id) {
-      Logger.log('❌ Missing trip ID.');
+    if (!trip?.tripKeyID) {
+      Logger.log('❌ Missing trip key ID.');
       return;
     }
     const normalizedDate = Utils.formatDateString(trip.date || '');
@@ -157,7 +157,7 @@ class TripManager {
         tripsMap = new Map();
       }
     }
-    tripsMap.set(trip.id, trip);
+    tripsMap.set(trip.tripKeyID, trip);
     sheet.getRange(rowIndex + 2, jsonCol).setValue(serializeTripMap(tripsMap));
 
     // update cache for this date
@@ -245,7 +245,7 @@ class TripManager {
       const cellValue = allData[i][1];
       try {
         const tripsMap = deserializeTripMap(cellValue);
-        if (tripsMap.has(trip.id)) {
+        if (tripsMap.has(trip.tripKeyID)) {
           sourceRowIndex = i;
           sourceTripsMap = tripsMap;
           sourceDateKey = rowDate ? Utilities.formatDate(new Date(rowDate), Session.getScriptTimeZone(), 'yyyy-MM-dd') : '';
@@ -260,12 +260,12 @@ class TripManager {
     const isUndated = normalizedDate === '';
     const isFutureOrToday = newDate >= today;
     if (isSameDate) {
-      sourceTripsMap.set(trip.id, trip);
+      sourceTripsMap.set(trip.tripKeyID, trip);
       sheet.getRange(sourceRowIndex + 2, jsonCol).setValue(serializeTripMap(sourceTripsMap));
       return;
     }
     if (!isUndated && isFutureOrToday) {
-      sourceTripsMap.delete(trip.id);
+      sourceTripsMap.delete(trip.tripKeyID);
       sheet.getRange(sourceRowIndex + 2, jsonCol).setValue(serializeTripMap(sourceTripsMap));
       let targetRowIndex = allData.findIndex(row => {
         const rowDate = row[0];
@@ -280,10 +280,10 @@ class TripManager {
         } catch (e) {
           Logger.log('⚠️ Could not parse JSON at target row ' + (targetRowIndex + 2));
         }
-        targetTripsMap.set(trip.id, trip);
+        targetTripsMap.set(trip.tripKeyID, trip);
         sheet.getRange(targetRowIndex + 2, jsonCol).setValue(serializeTripMap(targetTripsMap));
       } else {
-        sheet.appendRow([normalizedDate, serializeTripMap(new Map([[trip.id, trip]]))]);
+        sheet.appendRow([normalizedDate, serializeTripMap(new Map([[trip.tripKeyID, trip]]))]);
       }
       return;
     }
@@ -294,19 +294,19 @@ class TripManager {
       } catch (e) {
         Logger.log('⚠️ Could not parse undated trip JSON at B2');
       }
-      sourceTripsMap.delete(trip.id);
+      sourceTripsMap.delete(trip.tripKeyID);
       sheet.getRange(sourceRowIndex + 2, jsonCol).setValue(serializeTripMap(sourceTripsMap));
-      undatedTripsMap.set(trip.id, trip);
+      undatedTripsMap.set(trip.tripKeyID, trip);
       sheet.getRange(2, jsonCol).setValue(serializeTripMap(undatedTripsMap));
     }
   }
 
-  deleteTripFromLog(id, date) {
+  deleteTripFromLog(tripKeyID, date) {
     const sheet = this.logSheet;
     for (const k in logIndexCache) delete logIndexCache[k];
     const allData = sheet.getRange('A2:B101').getValues();
     const jsonCol = 2;
-    if (!id) return;
+    if (!tripKeyID) return;
     const isUndated = !date || String(date).trim() === '';
     const targetDate = isUndated ? '' : Utils.formatDateString(date);
     let rowIndex = -1;
@@ -327,8 +327,8 @@ class TripManager {
       Logger.log('⚠️ Could not parse existing JSON in row ' + (rowIndex + 2));
       return;
     }
-    const tripToDelete = tripsMap.get(id);
-    tripsMap.delete(id);
+    const tripToDelete = tripsMap.get(tripKeyID);
+    tripsMap.delete(tripKeyID);
     if (tripToDelete) {
       const originalId = tripToDelete.id;
       for (const [tid, t] of Array.from(tripsMap.entries())) {
@@ -348,7 +348,7 @@ class TripManager {
     allTrips.forEach(trip => {
       const so = soMap[trip.tripKeyID] || {};
       if (JSON.stringify(so) === target) {
-        this.deleteTripFromLog(trip.id, trip.date);
+        this.deleteTripFromLog(trip.tripKeyID, trip.date);
         delete soMap[trip.tripKeyID];
       }
     });
@@ -367,7 +367,7 @@ class TripManager {
         JSON.stringify(so) === target &&
         normalizedDates.includes(Utils.formatDateString(trip.date))
       ) {
-        this.deleteTripFromLog(trip.id, trip.date);
+        this.deleteTripFromLog(trip.tripKeyID, trip.date);
         delete soMap[trip.tripKeyID];
       }
     });
