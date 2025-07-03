@@ -150,8 +150,47 @@
     return new Date(y, m - 1, d);
   }
 
+  function encodeDatePattern(startDate, endDate, daysOfWeek) {
+    const days = Array.isArray(daysOfWeek)
+      ? daysOfWeek.map(d => d.toUpperCase()).join(',')
+      : '';
+    return [startDate, endDate, days].join('|');
+  }
+
+  function decodeDatePattern(patternStr) {
+    if (!patternStr) return [];
+    const [startStr, endStr, daysStr] = patternStr.split('|');
+    if (!startStr || !endStr || !daysStr) return [];
+
+    const dayMap = {
+      SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6,
+    };
+    const dayNums = daysStr
+      .split(',')
+      .map(d => dayMap[d.trim().toUpperCase()])
+      .filter(d => d !== undefined);
+    if (dayNums.length === 0) return [];
+
+    const [sy, sm, sd] = startStr.split('-').map(Number);
+    const [ey, em, ed] = endStr.split('-').map(Number);
+    const start = new Date(sy, sm - 1, sd);
+    const end = new Date(ey, em - 1, ed);
+
+    const dates = [];
+    for (let cur = new Date(start); cur <= end; cur.setDate(cur.getDate() + 1)) {
+      if (dayNums.includes(cur.getDay())) {
+        dates.push(cur.toISOString().slice(0, 10));
+      }
+    }
+    return dates;
+  }
+
   function expandStandingOrder(trip) {
     if (!trip || !trip.standingOrder) return trip && trip.date ? [trip.date] : [];
+
+    if (trip.standingOrder.pattern) {
+      return decodeDatePattern(trip.standingOrder.pattern);
+    }
 
     const { startDate, endDate, frequency, days = [] } = trip.standingOrder;
     if (!startDate || !endDate) return trip.date ? [trip.date] : [];

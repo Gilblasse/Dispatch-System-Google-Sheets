@@ -166,16 +166,17 @@
         };
 
         const isStandingOrder = document.getElementById("standing-order-checkbox")?.checked;
+        let standingOrder = null;
         if (isStandingOrder) {
-          trip.standingOrder = {
+          standingOrder = {
             frequency: document.getElementById("standing-frequency").value,
             startDate: document.getElementById("standing-start-date").value,
             endDate: document.getElementById("standing-end-date").value,
             days: Array.from(document.querySelectorAll("#custom-days input:checked"))
               .map(cb => cb.value)
           };
-          const start = parseLocalDate(trip.standingOrder.startDate);
-          const end = parseLocalDate(trip.standingOrder.endDate);
+          const start = parseLocalDate(standingOrder.startDate);
+          const end = parseLocalDate(standingOrder.endDate);
           if (end < start) {
             alert("🚫 Standing order end date cannot be before start date.");
             document.getElementById("loading-overlay").style.display = "none";
@@ -198,13 +199,39 @@
           return;
         }
 
-        const expandedDates = expandStandingOrder(trip);
+        let expandedDates = [date];
         if (isStandingOrder) {
-          trip.standingOrder.dates = expandedDates;
-          trip.standingOrder.withReturnTrip = isReturnTrip;
-          if (isReturnTrip && returnTime) {
-            trip.standingOrder.returnTime = returnTime;
+          const dayNames = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+          const freq = standingOrder.frequency;
+          const startDay = dayNames[parseLocalDate(standingOrder.startDate).getDay()];
+          let daysForPattern = [];
+          switch (freq) {
+            case "DAILY":
+              daysForPattern = dayNames;
+              break;
+            case "WEEKDAYS":
+              daysForPattern = dayNames.slice(1, 6);
+              break;
+            case "WEEKENDS":
+              daysForPattern = [dayNames[0], dayNames[6]];
+              break;
+            default:
+              daysForPattern = standingOrder.days.length
+                ? standingOrder.days
+                : [startDay];
           }
+          const pattern = encodeDatePattern(
+            standingOrder.startDate,
+            standingOrder.endDate,
+            daysForPattern
+          );
+          standingOrder = {
+            ...standingOrder,
+            pattern,
+            withReturnTrip: isReturnTrip,
+            ...(isReturnTrip && returnTime ? { returnTime } : {})
+          };
+          expandedDates = decodeDatePattern(pattern);
         }
 
         const tripsToSave = [];
@@ -219,9 +246,6 @@
             id: `${driver}|${dateStr}|${time}|${passenger}|${pickup}`,
             recurringId: parentTripKeyID
           };
-          if (isStandingOrder) {
-            t.standingOrder = { ...trip.standingOrder };
-          }
           tripsToSave.push(t);
 
           if (isReturnTrip && returnTime) {
@@ -237,20 +261,40 @@
               returnOf: t.id,
               recurringId: parentTripKeyID
             };
-            if (isStandingOrder) {
-              rt.standingOrder = { ...trip.standingOrder };
-            }
             tripsToSave.push(rt);
           }
         }
 
-        google.script.run
-          .withSuccessHandler(() => {
-            document.getElementById("loading-overlay").style.display = "none";
-            google.script.run.withSuccessHandler().withFailureHandler(handleError).openPassengerTripList(date);
-          })
-          .withFailureHandler(handleError)
-          .addTripToLog(tripsToSave);
+        function finalize() {
+          document.getElementById("loading-overlay").style.display = "none";
+          google.script.run
+            .withSuccessHandler()
+            .withFailureHandler(handleError)
+            .openPassengerTripList(date);
+        }
+
+        if (isStandingOrder && standingOrder) {
+          google.script.run
+            .withSuccessHandler(map => {
+              map[parentTripKeyID] = standingOrder;
+              google.script.run
+                .withSuccessHandler(() => {
+                  google.script.run
+                    .withSuccessHandler(finalize)
+                    .withFailureHandler(handleError)
+                    .addTripToLog(tripsToSave);
+                })
+                .withFailureHandler(handleError)
+                .updateStandingOrderMap(map);
+            })
+            .withFailureHandler(handleError)
+            .getStandingOrderMap();
+        } else {
+          google.script.run
+            .withSuccessHandler(finalize)
+            .withFailureHandler(handleError)
+            .addTripToLog(tripsToSave);
+        }
       }
 
     </script>

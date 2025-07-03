@@ -103,21 +103,9 @@ class TripManager {
       return;
     }
     trip.time = this.normalizeTimeString(trip.time);
-    if (trip.standingOrder && trip.standingOrder.returnTime) {
-      trip.standingOrder.returnTime = this.normalizeTimeString(trip.standingOrder.returnTime);
-    }
     if (!trip.tripKeyID) {
       trip.tripKeyID = Utilities.getUuid();
     }
-    if (trip.standingOrder) {
-      const soKey = trip.recurringId || trip.tripKeyID;
-      if (soKey) {
-        const soMap = this.getStandingOrderMap();
-        soMap[soKey] = trip.standingOrder;
-        this.updateStandingOrderMap(soMap);
-      }
-    }
-    delete trip.standingOrder;
     const sheet = this.logSheet;
     for (const k in logIndexCache) delete logIndexCache[k];
     const allData = sheet.getRange('A2:B101').getValues();
@@ -218,21 +206,9 @@ class TripManager {
     const jsonCol = 2;
     if (!trip?.id) return;
     trip.time = this.normalizeTimeString(trip.time);
-    if (trip.standingOrder && trip.standingOrder.returnTime) {
-      trip.standingOrder.returnTime = this.normalizeTimeString(trip.standingOrder.returnTime);
-    }
     if (!trip.tripKeyID) {
       trip.tripKeyID = Utilities.getUuid();
     }
-    if (trip.standingOrder) {
-      const soKey = trip.recurringId || trip.tripKeyID;
-      if (soKey) {
-        const soMap = this.getStandingOrderMap();
-        soMap[soKey] = trip.standingOrder;
-        this.updateStandingOrderMap(soMap);
-      }
-    }
-    delete trip.standingOrder;
     const normalizedDate = Utils.formatDateString(trip.date || '');
     const today = new Date();
     today.setHours(0, 0, 0, 0);
