@@ -322,10 +322,10 @@ class TripManager {
     const allTrips = this.getAllTrips();
     const target = JSON.stringify(standingOrder);
     allTrips.forEach(trip => {
-      const so = soMap[trip.tripKeyID] || {};
+      const so = soMap[trip.recurringId] || {};
       if (JSON.stringify(so) === target) {
         this.deleteTripFromLog(trip.tripKeyID, trip.date);
-        delete soMap[trip.tripKeyID];
+        delete soMap[trip.recurringId];
       }
     });
     this.updateStandingOrderMap(soMap);
@@ -338,13 +338,13 @@ class TripManager {
     const allTrips = this.getAllTrips();
     const target = JSON.stringify(standingOrder);
     allTrips.forEach(trip => {
-      const so = soMap[trip.tripKeyID] || {};
+      const so = soMap[trip.recurringId] || {};
       if (
         JSON.stringify(so) === target &&
         normalizedDates.includes(Utils.formatDateString(trip.date))
       ) {
         this.deleteTripFromLog(trip.tripKeyID, trip.date);
-        delete soMap[trip.tripKeyID];
+        delete soMap[trip.recurringId];
       }
     });
     this.updateStandingOrderMap(soMap);
