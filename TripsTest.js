@@ -11,8 +11,8 @@ class TripsTest {
     const standingOrder = {
       pattern: encodeDatePattern(
         '2024-06-01',
-        '2024-06-05',
-        ['MO', 'TU', 'WE', 'TH', 'FR']
+        '2024-06-02',
+        ['SAT', 'SUN']
       ),
       withReturnTrip: true,
       returnTime: '1899-12-30T14:40:00Z'
@@ -46,11 +46,15 @@ class TripsTest {
     manager.addTripToLog(trip1);
     manager.addTripToLog(trip2);
 
-    manager.deleteStandingOrderOnDates(standingOrder, ['2024-06-01']);
+    manager.deleteStandingOrderOnDates(soKey, ['2024-06-01', '2024-06-02']);
 
-    const remaining = manager.getAllTrips().map(t => t.id);
-    if (remaining.length !== 1 || remaining[0] !== 't2') {
-      throw new Error('Trip was not removed from log sheet');
+    const remaining = manager.getAllTrips();
+    if (remaining.length !== 0) {
+      throw new Error('Trips were not removed from log sheet');
+    }
+
+    if (manager.getStandingOrderMap()[soKey]) {
+      throw new Error('Standing order template not deleted');
     } else {
       Logger.log('testDeleteStandingOrderOnDates passed');
     }
