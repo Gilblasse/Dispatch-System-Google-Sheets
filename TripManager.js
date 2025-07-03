@@ -331,22 +331,60 @@ class TripManager {
     this.updateStandingOrderMap(soMap);
   }
 
-  deleteStandingOrderOnDates(standingOrder, dates) {
-    if (!standingOrder || !Array.isArray(dates)) return;
+  deleteStandingOrderOnDates(recurringId, dates) {
+    if (!recurringId || !Array.isArray(dates) || dates.length === 0) return;
+    const sheet = this.logSheet;
     const normalizedDates = dates.map(d => Utils.formatDateString(d));
     const soMap = this.getStandingOrderMap();
-    const allTrips = this.getAllTrips();
-    const target = JSON.stringify(standingOrder);
-    allTrips.forEach(trip => {
-      const so = soMap[trip.recurringId] || {};
-      if (
-        JSON.stringify(so) === target &&
-        normalizedDates.includes(Utils.formatDateString(trip.date))
-      ) {
-        this.deleteTripFromLog(trip.tripKeyID, trip.date);
-        delete soMap[trip.recurringId];
+
+    const lastRow = sheet.getLastRow();
+    const data = lastRow > 1 ? sheet.getRange(2, 1, lastRow - 1, 2).getValues() : [];
+    const dateToRow = {};
+    for (let i = 0; i < data.length; i++) {
+      const d = data[i][0];
+      if (!d) continue;
+      const key = Utilities.formatDate(new Date(d), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+      if (!dateToRow[key]) dateToRow[key] = i + 2;
+    }
+
+    normalizedDates.forEach(dateStr => {
+      const rowIndex = dateToRow[dateStr];
+      if (!rowIndex) return;
+      const cell = sheet.getRange(rowIndex, 2);
+      const json = cell.getValue();
+      if (!json) return;
+      let map;
+      try {
+        map = deserializeTripMap(json);
+      } catch (e) {
+        map = new Map();
+      }
+      let changed = false;
+      Array.from(map.entries()).forEach(([id, trip]) => {
+        if (trip && trip.recurringId === recurringId) {
+          map.delete(id);
+          changed = true;
+        }
+      });
+      if (changed) {
+        cell.setValue(serializeTripMap(map));
       }
     });
+
+    const standingOrder = soMap[recurringId];
+    if (standingOrder) {
+      const allDates = standingOrder.pattern
+        ? decodeDatePattern(standingOrder.pattern).map(d =>
+            Utils.formatDateString(d)
+          )
+        : [];
+      const deleteAll =
+        allDates.length > 0 &&
+        normalizedDates.length >= allDates.length &&
+        allDates.every(d => normalizedDates.includes(d));
+      if (deleteAll) delete soMap[recurringId];
+    }
+
     this.updateStandingOrderMap(soMap);
   }
 }
@@ -360,6 +398,6 @@ function getAllTrips() { return tripManager.getAllTrips(); }
 function updateTripInLog(trip) { return tripManager.updateTripInLog(trip); }
 function deleteTripFromLog(id, date) { return tripManager.deleteTripFromLog(id, date); }
 function deleteStandingOrder(standingOrder) { return tripManager.deleteStandingOrder(standingOrder); }
-function deleteStandingOrderOnDates(standingOrder, dates) { return tripManager.deleteStandingOrderOnDates(standingOrder, dates); }
+function deleteStandingOrderOnDates(recurringId, dates) { return tripManager.deleteStandingOrderOnDates(recurringId, dates); }
 function getStandingOrderMap() { return tripManager.getStandingOrderMap(); }
 function updateStandingOrderMap(map) { return tripManager.updateStandingOrderMap(map); }
