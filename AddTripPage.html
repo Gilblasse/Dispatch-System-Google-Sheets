@@ -275,28 +275,53 @@
             .openPassengerTripList(date);
         }
 
-        if (isStandingOrder && standingOrder) {
-          google.script.run
-            .withSuccessHandler(map => {
-              map[parentTripKeyID] = standingOrder;
-              google.script.run
-                .withSuccessHandler(() => {
-                  google.script.run
-                    .withSuccessHandler(finalize)
-                    .withFailureHandler(handleError)
-                    .addTripToLog(tripsToSave);
-                })
-                .withFailureHandler(handleError)
-                .updateStandingOrderMap(map);
-            })
-            .withFailureHandler(handleError)
-            .getStandingOrderMap();
-        } else {
-          google.script.run
-            .withSuccessHandler(finalize)
-            .withFailureHandler(handleError)
-            .addTripToLog(tripsToSave);
+        function saveTrips() {
+          if (isStandingOrder && standingOrder) {
+            google.script.run
+              .withSuccessHandler(map => {
+                map[parentTripKeyID] = standingOrder;
+                google.script.run
+                  .withSuccessHandler(() => {
+                    google.script.run
+                      .withSuccessHandler(finalize)
+                      .withFailureHandler(handleError)
+                      .addTripToLog(tripsToSave);
+                  })
+                  .withFailureHandler(handleError)
+                  .updateStandingOrderMap(map);
+              })
+              .withFailureHandler(handleError)
+              .getStandingOrderMap();
+          } else {
+            google.script.run
+              .withSuccessHandler(finalize)
+              .withFailureHandler(handleError)
+              .addTripToLog(tripsToSave);
+          }
         }
+
+        const duplicateChecks = tripsToSave.map(t =>
+          new Promise((resolve, reject) => {
+            google.script.run
+              .withSuccessHandler(res => resolve(res))
+              .withFailureHandler(err => reject(err))
+              .checkDuplicateTrip(t);
+          })
+        );
+
+        Promise.all(duplicateChecks)
+          .then(results => {
+            if (results.some(r => r)) {
+              alert("🚫 Duplicate trip detected.");
+              document.getElementById("loading-overlay").style.display = "none";
+              return;
+            }
+            saveTrips();
+          })
+          .catch(err => {
+            document.getElementById("loading-overlay").style.display = "none";
+            handleError(err);
+          });
       }
 
     </script>

@@ -184,6 +184,23 @@ class TripManager {
     return row || {};
   }
 
+  /**
+   * Check if a trip already exists on the given date. Duplicates are
+   * identified either by matching the full trip id or by matching a variant
+   * that ignores the driver portion of the id.
+   * @param {Object} trip Trip object to compare
+   * @return {boolean} True if a duplicate exists
+   */
+  isDuplicateTrip(trip) {
+    if (!trip || !trip.date) return false;
+    const trips = this.getTripsByDate(Utils.formatDateString(trip.date));
+    const altId = `|${Utils.formatDateString(trip.date)}|${trip.time}|${trip.passenger}|${trip.pickup}`;
+    return trips.some(t => {
+      const matchAlt = `|${Utils.formatDateString(t.date)}|${t.time}|${t.passenger}|${t.pickup}`;
+      return t.id === trip.id || matchAlt === altId;
+    });
+  }
+
   getAllTrips() {
     const sheet = this.logSheet;
     const data = sheet.getRange('A2:B').getValues();
@@ -401,3 +418,4 @@ function deleteStandingOrder(standingOrder) { return tripManager.deleteStandingO
 function deleteStandingOrderOnDates(recurringId, dates) { return tripManager.deleteStandingOrderOnDates(recurringId, dates); }
 function getStandingOrderMap() { return tripManager.getStandingOrderMap(); }
 function updateStandingOrderMap(map) { return tripManager.updateStandingOrderMap(map); }
+function checkDuplicateTrip(trip) { return tripManager.isDuplicateTrip(trip); }
