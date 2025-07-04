@@ -16,7 +16,7 @@
 
       <?!= include('TripFormFields') ?>
 
-      <button class="save-button" style="display:none;" onclick="submitTrip()">💾 Save Trip</button>
+      <button class="save-button" style="display:none;" onclick="submitTrip()" disabled>💾 Save Trip</button>
 
     </div>
 
@@ -37,6 +37,16 @@
       const rawTripId = <?= JSON.stringify(tripId) ?>.replace(/^"+|"+$/g, '');
       const rawTripDate = <?= JSON.stringify(tripDate) ?>.replace(/^"+|"+$/g, '');
       let currentTrip = null;
+
+      function checkFormValidity() {
+        const requiredFields = document.querySelectorAll('.trip-form [required]');
+        const saveBtn = document.querySelector('.save-button');
+        const allValid = Array.from(requiredFields).every(f => f.value.trim());
+        if (saveBtn) {
+          saveBtn.disabled = !allValid;
+          saveBtn.classList.toggle('disabled', !allValid);
+        }
+      }
 
       document.addEventListener("DOMContentLoaded", () => {
         // Hide add-trip only checkboxes
@@ -64,6 +74,12 @@
           .getTripById(safeId, safeDate);
 
         loadTripFormData(); // 🔁 Load passengers, vehicles, and drivers
+
+        checkFormValidity();
+        document.querySelectorAll('.trip-form input, .trip-form select, .trip-form textarea').forEach(el => {
+          el.addEventListener('input', checkFormValidity);
+          el.addEventListener('change', checkFormValidity);
+        });
       });
 
 
@@ -155,6 +171,8 @@
         google.script.run.withSuccessHandler(map => {
           map[currentTrip.recurringId];
         }).withFailureHandler(() => {}).getStandingOrderMap();
+
+        checkFormValidity();
       }
 
 

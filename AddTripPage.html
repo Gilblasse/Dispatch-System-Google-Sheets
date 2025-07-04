@@ -15,7 +15,7 @@
 
       <?!= include('TripFormFields') ?>
 
-      <button onclick="submitNewTrip()" class="save-button">➕ Add Trip</button>
+      <button onclick="submitNewTrip()" class="save-button" disabled>➕ Add Trip</button>
     </div>
 
     <?!= include('SharedLoaders') ?>
@@ -23,6 +23,16 @@
     <script>
       const initialDate = <?= JSON.stringify(initialDate) ?>;
       let passengerProfiles = {};
+
+      function checkFormValidity() {
+        const requiredFields = document.querySelectorAll('.trip-form [required]');
+        const saveBtn = document.querySelector('.save-button');
+        const allValid = Array.from(requiredFields).every(f => f.value.trim());
+        if (saveBtn) {
+          saveBtn.disabled = !allValid;
+          saveBtn.classList.toggle('disabled', !allValid);
+        }
+      }
 
       document.addEventListener("DOMContentLoaded", () => {
         const date = JSON.parse(initialDate) || new Date().toISOString().slice(0, 10);
@@ -35,6 +45,12 @@
           const name = document.getElementById("trip-passenger").value;
           if (name) syncPassengerProfile(name);
         }, 150);
+
+        checkFormValidity();
+        document.querySelectorAll('.trip-form input, .trip-form select, .trip-form textarea').forEach(el => {
+          el.addEventListener('input', checkFormValidity);
+          el.addEventListener('change', checkFormValidity);
+        });
       });
 
 
