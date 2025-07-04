@@ -861,6 +861,11 @@
     card.className = "trip-card";
     card.dataset.tripId = trip.id;
     const isReturn = !!trip.returnOf;
+    const now = new Date();
+    now.setHours(0,0,0,0);
+    const tripDate = new Date(trip.date);
+    tripDate.setHours(0,0,0,0);
+    const isPastTrip = tripDate < now;
 
     card.innerHTML = `
       <div class="trip-info">
@@ -875,7 +880,7 @@
           <span class="${driverClass}">${trip.driver}</span>
           ${trip?.notes?.length ? `<span class="comment-icon" title="${trip.notes.replace(/"/g, '&quot;')}">💬</span>` : ''}
           ${isReturn ? `<span class="comment-icon" title="Show linked original trip" onclick="filterByTripId('${trip.returnOf}')">🔁 Return</span>` : ''}
-          <span class="edit-driver" onclick="editTrip('${trip.id}', '${trip.date}')">✏️</span>
+          <span class="edit-driver" onclick="editTrip('${trip.id}', '${trip.date}')">${isPastTrip ? '👁️' : '✏️'}</span>
         </div>
       </div>
       <div class="trip-time ${timeClass}">${formatTime(trip.time)}</div>
