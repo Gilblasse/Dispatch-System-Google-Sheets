@@ -122,6 +122,56 @@
         return new Date(y, m - 1, d);
       }
 
+      const COLUMN = {
+        LOG: {
+          DATE: 0,
+          START_TIME: 1,
+          TIME: 2,
+          PASSENGER: 3,
+          TRANSPORT: 5,
+          PHONE: 6,
+          MEDICAID: 7,
+          INVOICE: 8,
+          PICKUP: 9,
+          TRIP_KEY_ID: 10,
+          IN: 11,
+          DROPOFF: 12,
+          OUT: 14,
+          STATUS: 16,
+          VEHICLE: 17,
+          DRIVER: 20,
+          ID: 23,
+          NOTES: 24,
+          RETURN_OF: 30,
+          RECURRING_ID: 31,
+        },
+      };
+
+      function tripObjectToRowArray(trip) {
+        const row = Array(COLUMN.LOG.RECURRING_ID + 1).fill("");
+        row[COLUMN.LOG.DATE] = trip.date || "";
+        row[COLUMN.LOG.START_TIME] = trip.startTime || "";
+        row[COLUMN.LOG.TIME] = trip.time || "";
+        row[COLUMN.LOG.PASSENGER] = trip.passenger || "";
+        row[COLUMN.LOG.TRANSPORT] = trip.transport || "";
+        row[COLUMN.LOG.PHONE] = trip.phone || "";
+        row[COLUMN.LOG.MEDICAID] = trip.medicaid || "";
+        row[COLUMN.LOG.INVOICE] = trip.invoice || "";
+        row[COLUMN.LOG.PICKUP] = trip.pickup || "";
+        row[COLUMN.LOG.TRIP_KEY_ID] = trip.tripKeyID || "";
+        row[COLUMN.LOG.IN] = trip.in || "";
+        row[COLUMN.LOG.DROPOFF] = trip.dropoff || "";
+        row[COLUMN.LOG.OUT] = trip.out || "";
+        row[COLUMN.LOG.STATUS] = trip.status || "";
+        row[COLUMN.LOG.VEHICLE] = trip.vehicle || "";
+        row[COLUMN.LOG.DRIVER] = trip.driver || "";
+        row[COLUMN.LOG.ID] = trip.id || "";
+        row[COLUMN.LOG.NOTES] = trip.notes || "";
+        row[COLUMN.LOG.RETURN_OF] = trip.returnOf || "";
+        row[COLUMN.LOG.RECURRING_ID] = trip.recurringId || "";
+        return row;
+      }
+
 
       function generateTripKeyID() {
         if (crypto.randomUUID) {
@@ -312,10 +362,11 @@
                 map[parentTripKeyID] = standingOrder;
                 google.script.run
                   .withSuccessHandler(() => {
+                    const parent = [parentTripKeyID, tripObjectToRowArray(tripsToSave[0])];
                     google.script.run
                       .withSuccessHandler(finalize)
                       .withFailureHandler(handleError)
-                      .addTripToLog(tripsToSave);
+                      .createRecurringTripAcrossDatesFast(parent, expandedDates);
                   })
                   .withFailureHandler(handleError)
                   .updateStandingOrderMap(map);
