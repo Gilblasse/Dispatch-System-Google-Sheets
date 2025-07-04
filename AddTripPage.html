@@ -260,7 +260,7 @@
             date: dateStr,
             tripKeyID,
             id: `${driver}|${dateStr}|${time}|${passenger}|${pickup}`,
-            recurringId: parentTripKeyID
+            ...(isStandingOrder ? { recurringId: parentTripKeyID } : {})
           };
           tripsToSave.push(t);
 
@@ -275,7 +275,7 @@
               dropoff: pickup,
               notes: (t.notes || "") + " [RETURN TRIP]",
               returnOf: t.id,
-              recurringId: parentTripKeyID
+              ...(isStandingOrder ? { recurringId: parentTripKeyID } : {})
             };
             tripsToSave.push(rt);
           }
