@@ -336,7 +336,9 @@ class TripManager {
   deleteTripFromLog(tripKeyID, date) {
     const sheet = this.logSheet;
     for (const k in logIndexCache) delete logIndexCache[k];
-    const allData = sheet.getRange('A2:B101').getValues();
+    const lastRow = sheet.getLastRow();
+    const allData =
+      lastRow > 1 ? sheet.getRange(2, 1, lastRow - 1, 2).getValues() : [];
     const jsonCol = 2;
     if (!tripKeyID) return;
     const isUndated = !date || String(date).trim() === '';
