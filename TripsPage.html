@@ -657,7 +657,7 @@
         return dateStr;
       }
       const date = new Date(dateStr);
-      return date.valueOf() ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
+      return date.valueOf() ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) : '-';
     }
 
     function renderTrips(trips) {

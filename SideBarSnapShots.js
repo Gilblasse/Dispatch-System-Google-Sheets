@@ -228,7 +228,7 @@ function restoreDispatchFromLog(date) {
     const toCleanTime = val => {
       if (!val || isNaN(new Date(val))) return "";
       const d = new Date(val);
-      return new Date(1899, 11, 30, d.getHours(), d.getMinutes());
+      return new Date(1899, 11, 30, d.getUTCHours(), d.getUTCMinutes());
     };
 
     row[0] = new Date(year, month - 1, day); // Local midnight (correct)
