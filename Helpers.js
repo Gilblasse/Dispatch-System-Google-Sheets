@@ -96,7 +96,7 @@ function toTimeOnlySmart(val, { returnMillis = true } = {}) {
   // ISO 8601 string
   if (typeof val === "string" && /^\d{4}-\d{2}-\d{2}T/.test(val)) {
     const d = new Date(val);
-    const result = new Date(1899, 11, 30, d.getHours(), d.getMinutes());
+    const result = new Date(1899, 11, 30, d.getUTCHours(), d.getUTCMinutes());
     return returnMillis ? result.getTime() : result;
   }
 
