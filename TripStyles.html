@@ -101,7 +101,14 @@
     z-index: 10;
   }
 
-  .save-button:hover {
+  .save-button:disabled,
+  .save-button.disabled {
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+  }
+
+  .save-button:not(:disabled):hover {
     background-color: #155ab6;
   }
 
